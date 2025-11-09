@@ -1,0 +1,36 @@
+# --- Python cache files ---
+__pycache__/
+*.so
+*.egg
+*.egg-info/
+*.pyo
+*.pyd
+
+# --- Jupyter notebooks ---
+.ipynb_checkpoints/
+
+# --- Data ---
+data/processed/
+data/*.parquet
+data/*.zip
+data/*.gz
+*.csv
+
+# --- Virtual environments ---
+.env
+.venv/
+env/
+venv/
+ENV/
+
+# --- Logs & temp ---
+*.log
+*.tmp
+
+# --- System files ---
+.DS_Store
+Thumbs.db
+
+# --- Results / Figures ---
+results/
+figures/
