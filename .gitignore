@@ -8,6 +8,7 @@ __pycache__/
 
 # --- Jupyter notebooks ---
 .ipynb_checkpoints/
+*.ipynb
 
 # --- Data ---
 data/processed/

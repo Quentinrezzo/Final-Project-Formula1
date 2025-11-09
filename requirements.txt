@@ -1,0 +1,14 @@
+# Core data science libraries
+pandas
+numpy
+
+# Kaggle dataset handling
+Kagglehub
+Kaggle # to download the dataset
+
+#Development tools
+jupyter
+notebook
+black #code formatting (PEP8 compliance)
+flake8 #linting
+pytest #testing framework
