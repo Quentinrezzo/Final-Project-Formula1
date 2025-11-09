@@ -14,7 +14,6 @@ data/processed/
 data/*.parquet
 data/*.zip
 data/*.gz
-*.csv
 
 # --- Virtual environments ---
 .env
