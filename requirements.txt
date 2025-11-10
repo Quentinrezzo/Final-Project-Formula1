@@ -1,14 +1,18 @@
 # Core data science libraries
 pandas
 numpy
+scikit-learn
+matplotlib
+seaborn
 
 # Kaggle dataset handling
-Kagglehub
-Kaggle # to download the dataset
+kagglehub # to download datasets directly via KaggleHub
+kaggle # Kaggle API for alternative dataset access
 
-#Development tools
+# Development tools
 jupyter
 notebook
-black #code formatting (PEP8 compliance)
-flake8 #linting
-pytest #testing framework
+ipywidgets # to make progress bars work
+black # code formatting (PEP8 compliance)
+flake8 # linting
+pytest # testing framework
