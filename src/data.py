@@ -16,13 +16,23 @@ def download_dataset(destination: str = "Final-Project-Formula1/data/raw"):
     Returns:
        str: Local path to the dataset.
     """
-    # create the folder Final-Project-Formula1/data/raw if it does not already exist
+
+    # Define paths
     destination_path = Path(destination)
+    project_root = destination_path.parents[1]
+    
+    # Check if parent folder exists
+    if project_root.exists():
+        print(f"📂 Parent folder exists: {project_root}")
+    else:
+        print(f"❌ Parent folder not found: {project_root}")
+    
+    # Create the folder Final-Project-Formula1/data/raw if it does not already exist
     destination_path.mkdir(parents = True, exist_ok = True)
 
     # Check if dataset already exists (this avoid unnecessary downloads every time you run the script)
-    if any(destination_path.iterdir())
-        print(f"✅ Dataset already exists in {destination_path}"
+    if any(destination_path.iterdir()):
+        print(f"✅ Dataset already exists in {destination_path}")
         return destination_path
 
     # Copy the download files from Kaggle into your Final-Project-Formula1/data/raw directory
@@ -47,3 +57,4 @@ def load_csv(file_name: str, data_dir:str = "data/raw") -> pd.DataFrame:
         data_dir (str): Path where the dataset is stored
     Returns:
         pd.DataFrame: Loaded dataset as a pandas DataFrame
+    """
