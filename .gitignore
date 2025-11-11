@@ -5,6 +5,7 @@ __pycache__/
 *.egg-info/
 *.pyo
 *.pyd
+*.py[cod]
 
 # --- Jupyter notebooks ---
 .ipynb_checkpoints/
@@ -30,6 +31,11 @@ ENV/
 # --- System files ---
 .DS_Store
 Thumbs.db
+
+# --- Integrated Development Environment ---
+.vscode/
+.idea/
+*.swp
 
 # --- Results / Figures ---
 results/
