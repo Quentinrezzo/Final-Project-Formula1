@@ -1,51 +1,28 @@
 """
-Data cleaning and preprocessing functions for the Formula 1
+From now on, each CSV file will be taken individually to be modified and cleaned up so that we can work properly afterwards. When a CSV file is touched, it will go directly to a new folder called processed located under the main data folder, allowing the original files to remain in raw and the modified files in processed.
 """
 
 from pathlib import Path
 import pandas as pd
 
+# Create the new folder called 'processed' in order to store my modified CSV files
+processed_dir = Path("Final-Project-Formula1/data/processed")
+processed_dir.mkdir(parents = True, exist_ok = True)
+print(f"📂 Folder created (or already exists): {processed_dir}")
 
-def export_all_csv_to_excel():
-    """
-    Export all CSV files from the raw folder into a subfolder called raw_excel_data inside the main docs
-    directory
+# Load the first CSV file from data/raw
+df = pd.read_csv("Final-Project-Formula1/data/processed/circuits.csv")
 
-    Arg:
-       docs_dir (str): directory for saving all CSV files that have been exported to Excel.
-    returns:
-       str: Local path to the new raw_excel_data folder.
-    """
-    # Define paths
-    raw_dir = Path("Final-Project-Formula1/data/raw")
-    excel_dir = Path("Final-Project-Formula1/docs/raw_excel_data")
+# Create a new column titled 'lenght' between 'alt' and 'url'
+df["lenght"] = "N/A"
+cols = list(df.columns)
+alt_index = cols.index("alt")
+cols.insert(alt_index + 1, cols.pop(cols.index("length")))
+df = df[cols]
 
-    # Create the output folder if it does not exist
-    excel_dir.mkdir(parents = True, exist_ok = True)
-
-    # Get all CSV files from raw and make a loop through each file and export to Excel
-    csv_files = list(raw_dir.glob("*csv"))
-
-    success = 0
-    failed = 0
-    for i, f in enumerate(csv_files, start = 1):
-        try:
-            df = pd.read_csv(f)
-            excel_path = excel_dir / (f.stem + ".xlsx")
-            df.to_excel(excel_path, index = False)
-            success += 1
-            print(f"✅ ({i}/{len(csv_files)}) {f.name} → {excel_path.name}")
-        except Exception as e:
-            failed += 1
-            print(f"⚠️ ({i}/{len(csv_files)}) Could not export {f.name}: {e}")
-
-    if failed == 0:
-        print(f"📂 All Excel files saved in: {excel_dir}")
-        print("You can now open them directly from your Nuvolos environment")
-    else:
-        print(f"⚠️ Some files failed to export. Please check the messages above.")
-
-    return excel_dir
+# Save it back to CSV into the new processed folder
+df.to_csv("Final-Project-Formula1/data/processed/circuits_cleaned.csv", index=False)
+print("✅ New column 'lenght' added between 'alt' and 'url'")
 
 
         
