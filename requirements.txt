@@ -4,6 +4,7 @@ numpy
 scikit-learn
 matplotlib
 seaborn
+openpyxl
 
 # Kaggle dataset handling
 kagglehub # to download datasets directly via KaggleHub
