@@ -1,5 +1,5 @@
 """
-1. File allowing you to download the Kaggle base dataset to your Nuvolos environment and preview each raw file downloaded.
+File allowing you to download the Kaggle base dataset to your Nuvolos environment and preview each raw file downloaded.
 """
 
 from pathlib import Path
