@@ -1,19 +1,19 @@
 """
-Simple pytest file for downloading_dataset.py
+Pytest file for downloading_dataset.py
 """
 
 from pathlib import Path
 import pandas as pd
 import builtins
 
-# step 1: Allow notebook to see the src folder
+# step 1: Allow pytest to see the src folder
 import sys
 sys.path.append("/files/Final-Project-Formula1") #project root
 
 # Import the functions stored in the downloading_dataset.py file under the src folder
 from src.downloading_dataset import download_dataset, load_csv
 
-def test_download_dataset_copies_files(monkeypatch, tmp_path):
+def test_download_dataset(monkeypatch, tmp_path):
     """
     Simulate a Kaggle download by pointing dataset_download to a temp folder
     that contains a tiny CSV. Check the file is copied into data/raw.
@@ -39,7 +39,7 @@ def test_download_dataset_copies_files(monkeypatch, tmp_path):
     assert (dest_raw /"circuits.csv").read_text().startswith("a,b")
 
 
-def test_load_csv_reads_dataframe(monkeypatch, tmp_path):
+def test_load_csv(monkeypatch, tmp_path):
     """
     This test checks that load_csv() can read a small CSV file
     from data/raw/. If your function asks for user input, we fake it

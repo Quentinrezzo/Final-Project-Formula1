@@ -18,6 +18,7 @@ def create_processed_folder() -> Path:
     Create the new folder called 'processed' in order to store my modified CSV files
     Returns the path to the folder.
     """
+    
     # Create the 'processed' folder under 'data' if it doesn't exist yet.
     processed_dir = Path("Final-Project-Formula1/data/processed")
     processed_dir.mkdir(parents = True, exist_ok = True)
@@ -87,11 +88,16 @@ def filter_races_by_year(start_year: int = 2020, end_year: int = 2024) -> Path:
     return output_file
 
 
+"""
+From now on, each CSV file will be taken individually to be modified and cleaned up so that we can work properly afterwards.
+"""
+
+
 def filter_circuits_by_races() -> Path:
     """
     Filter the 'circuits.csv' file to include only the circuits that appear
     in the filtered 'races_cleaned.csv' file (2020–2024 seasons).
-    The filtered version is saved into the 'processed' folder.
+    The filtered version is saved into the 'processed' folder as: circuits_cleaned.csv
 
     Returns:
         Path: Path to the saved filtered CSV file.
@@ -109,8 +115,8 @@ def filter_circuits_by_races() -> Path:
     circuits_cleaned = circuits_df[circuits_df["circuitId"].isin(circuitId_recent)]
 
     # Save cleaned data to 'processed' folder
-    output_file.parent.mkdir(parents=True, exist_ok=True)
-    circuits_cleaned.to_csv(output_file, index=False)
+    output_file.parent.mkdir(parents = True, exist_ok = True)
+    circuits_cleaned.to_csv(output_file, index = False)
 
     # Check
     try:
@@ -123,7 +129,7 @@ def filter_circuits_by_races() -> Path:
         ignored_rows = len(circuits_df) - kept_rows
 
         print(f"📁 Saved to: {output_file}")
-        print("✅ Circuits successfully filtered and verified!")
+        print("✅ Circuits_cleaned successfully filtered and verified!")
         print(f" Circuits kept: {kept_rows} / {len(circuits_df)} total")
         print(f" Circuits ignored (not used between 2020–2024): {ignored_rows}")
 
@@ -134,45 +140,61 @@ def filter_circuits_by_races() -> Path:
     return output_file
 
 
-"""
-From now on, each CSV file will be taken individually to be modified and cleaned up so that we can work properly afterwards.
+def filter_constructor_results_by_races() -> Path:
+    """
+    Filter the 'constructor_results.csv' file to include only the constructor_results
+    that belong to races appearing in 'races_cleaned.csv' (2020–2024 seasons).
+    The filtered version is saved into the 'processed' folder as: constructor_results_cleaned.csv
 
+    Returns:
+        Path: Path to the saved filtered CSV file.
+    """
 
-def add_column_circuits() -> Path:
+    # Define file paths
+    races_file = Path("Final-Project-Formula1/data/processed/races_cleaned.csv")
+    constructor_results_file = Path("Final-Project-Formula1/data/raw/constructor_results.csv")
+    output_file = Path("Final-Project-Formula1/data/processed/constructor_results_cleaned.csv")
+
+    # Load the CSV files needed and filter the raceId used in years 2020-2024 to get the constructor_results
+    races_df = pd.read_csv(races_file)
+    constructor_df = pd.read_csv(constructor_results_file)
+    recent_races = races_df["raceId"].unique()
+    constructor_results_cleaned = constructor_df[constructor_df["raceId"].isin(recent_races)]
+
+    # Save cleaned data to 'processed' folder
+    output_file.parent.mkdir(parents = True, exist_ok = True)
+    constructor_results_cleaned.to_csv(output_file, index = False)
     
-    Load raw circuits.csv, add a 'length_km' column (default 'N/A'),
-    place it right after 'alt', and save to processed/circuits_cleaned.csv.
-    
-    
-    # Load the first CSV file from data/raw
-    df = pd.read_csv("Final-Project-Formula1/data/raw/circuits.csv")
-    
-    # Create a new column titled 'length_km' and place it right after 'alt'
-    df["length_km"] = "N/A"
-    cols = list(df.columns)
-    alt_index = cols.index("alt")
-    cols.insert(alt_index + 1, cols.pop(cols.index("length_km")))
-    df = df[cols]
-    
-    # Save cleaned version into the new processed folder
-    output_file = Path("Final-Project-Formula1/data/processed/circuits_cleaned.csv")
+    # Check
     try:
-        df.to_csv(output_file, index = False)
         if not output_file.exists():
-            print(f"❌ File not found in processed folder: {output_file}")
+            print(f"❌ File not found after saving: {output_file}")
             return None
 
-        check_output_file = pd.read_csv(output_file)
-        if "length_km" not in check_output_file.columns:
-            print("❌ Column 'length_km' was not found in the processed file.")
-            return None
-            
-        print("✅ New column 'length_km' added and saved to: {output_file}")
+        check_df = pd.read_csv(output_file)
+        kept_rows = len(check_df)
+        ignored_rows = len(constructor_df) - kept_rows
+
+        print(f"📁 Saved to: {output_file}")
+        print("✅ Constructor_results successfully filtered and verified!")
+        print(f" Constructor_results kept: {kept_rows} / {len(constructor_df)} total")
+        print(f" Constructor_results ignored (not used between 2020–2024): {ignored_rows}")
 
     except Exception as e:
-        print(f"⚠️ Error while saving processed file: {e}")
-        
+        print(f"⚠️ Error verifying filtered file: {e}")
+        return None
+
     return output_file
+
+
+def
+
+
+
+
+
+"""
+def filter
 
 
 def fill_circuit_lengths() -> None:
