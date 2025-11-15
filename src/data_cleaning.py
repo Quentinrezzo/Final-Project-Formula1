@@ -176,7 +176,7 @@ def filter_constructor_results_by_races() -> Path:
         ignored_rows = len(constructor_df) - kept_rows
 
         print(f"📁 Saved to: {output_file}")
-        print("✅ Constructor_results successfully filtered and verified!")
+        print("✅ Constructor_results_cleaned successfully filtered and verified!")
         print(f" Constructor_results kept: {kept_rows} / {len(constructor_df)} total")
         print(f" Constructor_results ignored (not used between 2020–2024): {ignored_rows}")
 
@@ -187,7 +187,150 @@ def filter_constructor_results_by_races() -> Path:
     return output_file
 
 
-def
+def filter_constructor_standings_by_races() -> Path:
+    """
+    Filter the 'constructor_standings.csv' file to include only the constructor_standings
+    that belong to races appearing in 'races_cleaned.csv' (2020–2024 seasons).
+    The filtered version is saved into the 'processed' folder as: constructor_standings_cleaned.csv
+
+    Returns:
+        Path: Path to the saved filtered CSV file.
+    """
+
+    # Define file paths
+    races_file = Path("Final-Project-Formula1/data/processed/races_cleaned.csv")
+    constructor_standings_file = Path("Final-Project-Formula1/data/raw/constructor_standings.csv")
+    output_file = Path("Final-Project-Formula1/data/processed/constructor_standings_cleaned.csv")
+
+    # Load the CSV files needed and filter the raceId used in years 2020-2024 to get the
+    # constructor_standings
+    races_df = pd.read_csv(races_file)
+    standings_df = pd.read_csv(constructor_standings_file)
+    recent_races = races_df["raceId"].unique()
+    constructor_standings_cleaned = standings_df[standings_df["raceId"].isin(recent_races)]
+
+    # Save cleaned data to 'processed' folder
+    output_file.parent.mkdir(parents = True, exist_ok = True)
+    constructor_standings_cleaned.to_csv(output_file, index = False)
+
+    # Check
+    try:
+        if not output_file.exists():
+            print(f"❌ File not found after saving: {output_file}")
+            return None
+
+        check_df = pd.read_csv(output_file)
+        kept_rows = len(check_df)
+        ignored_rows = len(standings_df) - kept_rows
+
+        print(f"📁 Saved to: {output_file}")
+        print("✅ Constructor_standings_cleaned successfully filtered and verified!")
+        print(f" Constructor_standings kept: {kept_rows} / {len(standings_df)} total")
+        print(f" Constructor_standings ignored (not used between 2020–2024): {ignored_rows}")
+
+    except Exception as e:
+        print(f"⚠️ Error verifying filtered file: {e}")
+        return None
+
+    return output_file
+
+
+def filter_constructors_by_results() -> Path:
+    """
+    Filter the 'constructors.csv' file to include only the constructors
+    that belong to results appearing in 'constructor_results_cleaned.csv' (2020–2024 seasons).
+    The filtered version is saved into the 'processed' folder as: constructors_cleaned.csv
+
+    Returns:
+        Path: Path to the saved filtered CSV file.
+    """
+
+    # Define file paths
+    results_file = Path("Final-Project-Formula1/data/processed/constructor_results_cleaned.csv")
+    constructors_file = Path("Final-Project-Formula1/data/raw/constructors.csv")
+    output_file = Path("Final-Project-Formula1/data/processed/constructors_cleaned.csv")
+
+    # Load the CSV files needed and filter the constructorId used in years 2020-2024 to get the constructors
+    results_df = pd.read_csv(results_file)
+    constructors_df = pd.read_csv(constructors_file)
+    recent_constructors = results_df["constructorId"].unique()
+    constructors_cleaned = constructors_df[constructors_df["constructorId"].isin(recent_constructors)]
+
+    # Save cleaned data to 'processed' folder
+    output_file.parent.mkdir(parents = True, exist_ok = True)
+    constructors_cleaned.to_csv(output_file, index = False)
+
+    # Check
+    try:
+        if not output_file.exists():
+            print(f"❌ File not found after saving: {output_file}")
+            return None
+
+        check_df = pd.read_csv(output_file)
+        kept_rows = len(check_df)
+        ignored_rows = len(constructors_df) - kept_rows
+
+        print(f"📁 Saved to: {output_file}")
+        print("✅ Constructors_cleaned successfully filtered and verified!")
+        print(f" Constructors kept: {kept_rows} / {len(constructors_df)} total")
+        print(f" Constructors ignored (not used between 2020–2024): {ignored_rows}")
+
+    except Exception as e:
+        print(f"⚠️ Error verifying filtered file: {e}")
+        return None
+
+    return output_file
+
+
+def filter_driver_standings_by_races() -> Path:
+    """
+    Filter the 'driver_standings.csv' file to include only the driver_standings
+    that belong to races appearing in 'races_cleaned.csv' (2020–2024 seasons).
+    The filtered version is saved into the 'processed' folder as: driver_standings_cleaned.csv
+
+    Returns:
+        Path: Path to the saved filtered CSV file.
+    """
+
+    # Define file paths
+    races_file = Path("Final-Project-Formula1/data/processed/races_cleaned.csv")
+    driver_standings_file = Path("Final-Project-Formula1/data/raw/driver_standings.csv")
+    output_file = Path("Final-Project-Formula1/data/processed/driver_standings_cleaned.csv")
+
+    # Load the CSV files needed and filter the raceId used in years 2020-2024 to get the
+    # driver_standings
+    races_df = pd.read_csv(races_file)
+    standings_df = pd.read_csv(driver_standings_file)
+    recent_races = races_df["raceId"].unique()
+    driver_standings_cleaned = standings_df[standings_df["raceId"].isin(recent_races)]
+
+    # Save cleaned data to 'processed' folder
+    output_file.parent.mkdir(parents = True, exist_ok = True)
+    driver_standings_cleaned.to_csv(output_file, index = False)
+
+    # Check
+    try:
+        if not output_file.exists():
+            print(f"❌ File not found after saving: {output_file}")
+            return None
+
+        check_df = pd.read_csv(output_file)
+        kept_rows = len(check_df)
+        ignored_rows = len(standings_df) - kept_rows
+
+        print(f"📁 Saved to: {output_file}")
+        print("✅ driver_standings_cleaned successfully filtered and verified!")
+        print(f" driver_standings kept: {kept_rows} / {len(standings_df)} total")
+        print(f" driver_standings ignored (not used between 2020–2024): {ignored_rows}")
+
+    except Exception as e:
+        print(f"⚠️ Error verifying filtered file: {e}")
+        return None
+
+    return output_file
+
+
+
 
 
 
