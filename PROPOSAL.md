@@ -6,7 +6,7 @@ Formula 1 is a sport driven by precision, technology, and data. Every race outco
 This project aims to apply data science and machine learning techniques to predict which drivers will finish in the Top 10 (the points-scoring positions for the Drivers' Championship) and ideally estimate their likely finishing order in Formula 1 races. The motivation is to explore how effectively historical data can explain race outcomes and to test whether data-driven predictions align with pre-race betting market expectations.
 
 # Planned approach and technologies
-I will use the **Kaggle Formula 1 World Championship (1950–2024)** dataset, which provides detailed information on races, drivers, teams and other relevant variables.
+I will use the **Kaggle Formula 1 Race Data** dataset, which provides detailed information on races, drivers, teams and other relevant variables.
 
 The project will include:
 - Data cleaning and preparation using **Python**, **pandas**, and **NumPy**

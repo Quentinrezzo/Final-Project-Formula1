@@ -9,8 +9,8 @@ import kagglehub
 
 def download_dataset(destination: str = "Final-Project-Formula1/data/raw"):
     """
-    Download the dataset named Formula 1 World Championship (1950 - 2024) from Kaggle using
-    KaggleHub.
+    Download the dataset named 'Formula 1 Race Data' (1950-2025) from Kaggle using
+    KaggleHub and copy it into the Final-Project-Formula1/data/raw folder.
 
     Arg:
        destination (str): Directory to save the dataset.
@@ -20,34 +20,18 @@ def download_dataset(destination: str = "Final-Project-Formula1/data/raw"):
 
     # Define paths
     destination_path = Path(destination)
-    project_root = destination_path.parents[1]
-    
-    # Check if parent folder exists (This is not essential because the line below creates
-    # the parent folder if it does not already exist, but it is useful for greater
-    # transparency)
-    if project_root.exists():
-        print(f"📂 Parent folder exists: {project_root}")
-    else:
-        print(f"❌ Parent folder not found: {project_root}")
     
     # Create the folder Final-Project-Formula1/data/raw if it does not already exist
     destination_path.mkdir(parents = True, exist_ok = True)
-
-    # Check if dataset already exists (this avoid unnecessary downloads every time you run
-    # the script)
-    if any(destination_path.iterdir()):
-        print(f"✅ Formula 1 World Championship (1950 - 2024) Dataset already exists in {destination_path}")
-        return destination_path
-
-    # Copy the download files from Kaggle into your Final-Project-Formula1/data/raw
-    # directory
+    
+    # Copy the download files from Kaggle into your Final-Project-Formula1/data/raw directory
     try:
-        print("📦 Downloading the dataset named Formula 1 World Championship (1950 - 2024) from Kaggle")
+        print("📦 Downloading the dataset named 'Formula 1 Race Data' (1950-2025) from Kaggle")
         # Download latest version
-        path = kagglehub.dataset_download("rohanrao/formula-1-world-championship-1950-2020")
+        path = kagglehub.dataset_download("jtrotman/formula-1-race-data")
         src_path = Path(path)
         shutil.copytree(src_path, destination_path, dirs_exist_ok = True)
-        print(f"✅ Formula 1 World Championship (1950 - 2024) Dataset download and available at: {destination_path}")
+        print(f"✅ Formula 1 Race Dataset download and available at: {destination_path}")
     except Exception as e:
         print("⚠️ Kaggle download failed:", e)
 

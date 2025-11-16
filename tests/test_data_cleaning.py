@@ -30,7 +30,7 @@ def test_create_processed_folder(monkeypatch, tmp_path):
 
 def test_filter_races_by_year(monkeypatch, tmp_path):
     """
-    This test checks that year filter for 2020-2024 works correctly into the races.csv file. In addition,
+    This test checks that year filter for 2020-2025 works correctly into the races.csv file. In addition,
     it checks if there is no other years outside the range into the new 'races_cleaned.csv' file.
     """
     
@@ -60,15 +60,15 @@ def test_filter_races_by_year(monkeypatch, tmp_path):
     # 5) Load the saved file and verify filtering
     df_out = pd.read_csv(expected)
     kept_years = sorted(df_out["year"].unique().tolist())
-    assert all(2020 <= y <= 2024 for y in kept_years)
-    assert kept_years == [2020, 2021, 2022, 2024]
-    assert len(df_out) == 4
+    assert all(2020 <= y <= 2025 for y in kept_years)
+    assert kept_years == [2020, 2021, 2022, 2024, 2025]
+    assert len(df_out) == 5
 
 
 def test_filter_circuits_by_races(monkeypatch, tmp_path):
     """
     This test checks that filter_circuits_by_races() keeps only the circuits
-    that appear in 'races_cleaned.csv' (2020–2024 races) and saves the
+    that appear in 'races_cleaned.csv' (2020–2025 races) and saves the
     filtered result into processed/circuits_cleaned.csv.
     """
 
@@ -82,18 +82,18 @@ def test_filter_circuits_by_races(monkeypatch, tmp_path):
     # 2) Create a races_cleaned file in processed
     races_path = processed_dir / "races_cleaned.csv"
     races_df = pd.DataFrame(
-        {"raceId":    [1, 2, 3, 4],
-         "year":      [2020, 2021, 2022, 2024],
-         "circuitId": [10, 11, 10, 12],
-         "name":      ["GP A", "GP B", "GP C", "GP D"],})
+        {"raceId":    [1, 2, 3, 4, 5],
+         "year":      [2020, 2021, 2022, 2024, 2025],
+         "circuitId": [10, 11, 10, 12, 13],
+         "name":      ["GP A", "GP B", "GP C", "GP D", "GP E"],})
     races_df.to_csv(races_path, index = False)
 
     # 3) Create a circuits.csv in raw with extra unused circuits
     circuits_path = raw_dir / "circuits.csv"
     circuits_df = pd.DataFrame(
-        {"circuitId": [10, 11, 12, 99],
-         "name":      ["Circuit A", "Circuit B", "Circuit C", "Old Circuit"],
-         "location":  ["X", "Y", "Z", "Anywhere"],})
+        {"circuitId": [10, 11, 12, 13, 99],
+         "name":      ["Circuit A", "Circuit B", "Circuit C", "Circuit D", "Old Circuit"],
+         "location":  ["W", "X", "Y", "Z", "Anywhere"],})
     circuits_df.to_csv(circuits_path, index = False)
 
     # 4) Run the function to keep only the relevant data
@@ -108,9 +108,9 @@ def test_filter_circuits_by_races(monkeypatch, tmp_path):
     # 6) Load the saved file and verify filtering
     df_out = pd.read_csv(expected)
     kept_Id = sorted(df_out["circuitId"].unique().tolist())
-    assert kept_Id == [10, 11, 12]
+    assert kept_Id == [10, 11, 12, 13]
     assert 99 not in df_out["circuitId"].values
-    assert len(df_out) == 3
+    assert len(df_out) == 4
 
 
 
