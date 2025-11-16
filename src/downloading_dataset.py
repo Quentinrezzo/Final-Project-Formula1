@@ -68,7 +68,7 @@ def load_csv() -> pd.DataFrame:
     # Folder where your data is stored
     raw_dir = "Final-Project-Formula1/data/raw"
     
-    # Show all CSV files in the processed folder
+    # Show all CSV files in the raw folder
     for file in Path(raw_dir).glob("*.csv"):
         print("•", file.name)
 
