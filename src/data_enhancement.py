@@ -42,7 +42,7 @@ def add_extra_info_on_circuits() -> Path:
         all_columns_present = all(col in check_df.columns for col in new_columns)
         
         if not all_columns_present:
-            print(f"❌ columns not found in circuits_cleaned file saved to: {circuits_cleaned}")
+            print(f"❌ Columns not found in circuits_cleaned file saved to: {circuits_cleaned}")
         else:
             print("✅ Columns successfully added:")
             print("   - length_km")
@@ -56,21 +56,24 @@ def add_extra_info_on_circuits() -> Path:
     return circuits_cleaned
 
 
-def fill_circuit_length():
+def fill_circuit_extra_info():
     """
-    Create a dictionnary to add each length of a circuit and then match them with the right CircuitId.
+    Create a dictionnary to add three new pieces of information to each circuitId in circuits_cleaned.csv:
+    - length_km: length of the circuit in kilometers
+    - is_night_race: True if the Grand Prix is usually held at night
+    - track_type: "technical", "high_speed", or "balanced"
 
     Returns:
-        Path: Path to the updated length_km to 'circuits_cleaned.csv' file.
+        Path: Path to the updated 'circuits_cleaned.csv' file.
     """
 
     # Define the file path
     circuits_cleaned = Path("Final-Project-Formula1/data/processed/circuits_cleaned.csv")
 
-    # Create the dictionnary for extra information values corresponding to CircuitId
-    circuits_length = {
+    # Dictionary containing extra information mapped by CircuitId
+    circuits_info = {
         1: {"length_km": 5.278, "is_night_race": False, "track_type": "balanced"},
-        3: {"length_km": 5.412, "is_night_race": "transition", "track_type": "balanced"},
+        3: {"length_km": 5.412, "is_night_race": True, "track_type": "balanced"},
         4: {"length_km": 4.657, "is_night_race": False, "track_type": "balanced"},
         5: {"length_km": 5.338, "is_night_race": False, "track_type": "balanced"},
         6: {"length_km": 3.337, "is_night_race": False, "track_type": "technical"},
@@ -86,7 +89,7 @@ def fill_circuit_length():
         21: {"length_km": 4.909, "is_night_race": False, "track_type": "technical"},
         22: {"length_km": 5.807, "is_night_race": False, "track_type": "technical"},
         80: {"length_km": 6.201, "is_night_race": True, "track_type": "high_speed"},
-        24: {"length_km": 5.281, "is_night_race": "transition", "track_type": "technical"},
+        24: {"length_km": 5.281, "is_night_race": True, "track_type": "technical"},
         32: {"length_km": 4.304, "is_night_race": False, "track_type": "balanced"},
         34: {"length_km": 5.842, "is_night_race": False, "track_type": "balanced"},
         39: {"length_km": 4.259, "is_night_race": False, "track_type": "balanced"},
@@ -100,14 +103,137 @@ def fill_circuit_length():
         78: {"length_km": 5.419, "is_night_race": True, "track_type": "balanced"},
         79: {"length_km": 5.412, "is_night_race": False, "track_type": "technical"},
     }
+
+    # Load the circuits_cleaned.csv file and add each row with dictionary values
+    df = pd.read_csv(circuits_cleaned)
+    
+    for index, row in df.iterrows():
+        circuitId = row["circuitId"]
         
+        if circuitId in circuits_info:
+            df.at[index, "length_km"] = circuits_info[circuitId]["length_km"]
+            df.at[index, "is_night_race"] = circuits_info[circuitId]["is_night_race"]
+            df.at[index, "track_type"] = circuits_info[circuitId]["track_type"]
+        else:
+            print(f"⚠️ circuitId {circuitId} not found in dictionary, values left as NA.")
+        
+    # Save back to file
+    df.to_csv(circuits_cleaned, index = False)
+
+    # Check
+    try:
+        check_df = pd.read_csv(circuits_cleaned)
+        all_info_in_columns = all(col in check_df.columns for col in ["length_km", "is_night_race", "track_type"])
+        
+        if not all_info_in_columns:
+            print(f"❌ Extra info in new columns not found in circuits_cleaned file saved to: {circuits_cleaned}")
+        else:
+            print("✅ circuits_cleaned.csv successfully updated with new circuit extra information")
+
+    except Exception as e:
+        print(f"⚠️ Error while updating circuits_cleaned.csv: {e}")
+        return None
+    
+    return circuits_cleaned
 
 
+def add_extra_info_on_races() -> Path:
+    """
+    Add a new column to 'races_cleaned.csv':
+    - races_distance_km: total length of the Grand Prix
+    
+    Returns:
+        Path: Path to the updated 'races_cleaned.csv' file.
+    """
+
+    # Define the file path
+    races_cleaned = Path("Final-Project-Formula1/data/processed/races_cleaned.csv")
+    
+    # Load the races_cleaned.csv file and prepare the new column
+    races_df = pd.read_csv(races_cleaned)
+    name_index = races_df.columns.get_loc("name")
+    new_column = "race_distance_km"
+    
+    # Add the new column
+    races_df.insert(name_index + 1, new_column, pd.NA)
+
+    # Save update file
+    races_df.to_csv(races_cleaned, index = False)
+
+    # Check
+    try:
+        check_df = pd.read_csv(races_cleaned)
+        
+        if new_column not in check_df.columns:
+            print(f"❌ Column '{new_col}' not found in races_cleaned file saved to: {races_cleaned}")
+        else:
+            print("✅ Column successfully added:")
+            print(f"   - {new_column}")
+
+    except Exception as e:
+        print(f"⚠️ Error verifying updated file: {e}")
+        return None
+
+    return races_cleaned
 
 
+def fill_races_distance_km():
+    """
+    Compute the total race distance (in km) for each Grand Prix between 2020–2025
+    and store it in the 'race_distance_km' column of races_cleaned.csv.
+    
+    Arg:
+        the formula is: race_distance_km = length_km * laps
 
+    Results:
+        Path: Path to the updated 'circuits_cleaned.csv' file.
+    """
+    # Define file paths
+    races_cleaned = Path("Final-Project-Formula1/data/processed/races_cleaned.csv")
+    circuits_cleaned = Path("Final-Project-Formula1/data/processed/circuits_cleaned.csv")
+    results_cleaned = Path("Final-Project-Formula1/data/processed/results_cleaned.csv")
+    
+    # Load the CSV files needed
+    races_df = pd.read_csv(races_cleaned)
+    circuits_df = pd.read_csv(circuits_cleaned)
+    results_df = pd.read_csv(results_cleaned)
 
+    # Get the real number of laps per race (only finished drivers)
+    finished = results_df[results_df["statusId"] == 1].copy()
+    laps_by_race = (finished.groupby("raceId")["laps"].max().rename("laps_completed"))
 
+    # Get the length of each circuit and merge all you need
+    merged = races_df.merge(circuits_df[["circuitId", "length_km"]], on = "circuitId", how = "left")
+    merged = merged.merge(laps_by_race, on = "raceId", how = "left")
+
+    # Compute real distance in kilometers
+    races_df["race_distance_km"] = merged["length_km"] * merged["laps_completed"]
+    races_df["race_distance_km"] = races_df["race_distance_km"].round(3)
+
+    # Save update file
+    races_df.to_csv(races_cleaned, index = False)
+
+    # Check
+    try:
+        check_df = pd.read_csv(races_cleaned)
+        
+        if "race_distance_km" not in check_df.columns:
+            print(f"❌ Column 'race_distance_km' not found in file: {races_cleaned}")
+            return None
+
+        if check_df["race_distance_km"].isna().all():
+            print(f"❌ Column 'race_distance_km' is empty in file: {races_cleaned}")
+            return None
+
+        print("✅ Column 'race_distance_km' successfully filled in races_cleaned.csv")
+
+    except Exception as e:
+        print(f"⚠️ Error verifying updated file: {e}")
+        return None
+
+    return races_cleaned
+        
+        
 
 
 
