@@ -1,11 +1,11 @@
 """
-File allowing you to filter the 'Formula 1 Race Data' dataset 
-to include only the most recent seasons (2020–2025), keeping 
+File allowing you to filter the 'Formula 1 Race Data' dataset
+to include only the most recent seasons (2020–2025), keeping
 the data consistent with the modern F1 regulations and structure.
 
-When a CSV file is filtered, it will go directly into a new folder called 'processed' 
-located under the main 'data' directory. This allows the original 
-files to remain untouched in 'raw', while the cleaned and filtered 
+When a CSV file is filtered, it will go directly into a new folder called 'processed'
+located under the main 'data' directory. This allows the original
+files to remain untouched in 'raw', while the cleaned and filtered
 versions are stored in 'processed' for analysis and modeling purposes.
 """
 
