@@ -232,12 +232,3 @@ def fill_races_distance_km():
         return None
 
     return races_cleaned
-        
-        
-
-
-
-
-    
-        
-        
