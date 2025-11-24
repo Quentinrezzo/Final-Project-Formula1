@@ -629,8 +629,10 @@ def filter_sprint_results_by_races() -> Path:
     output_file = Path("Final-Project-Formula1/data/processed/sprint_results_cleaned.csv")
     
     # Load the CSV files needed and filter the raceId used in years 2020-2025 to get the sprint_results
+    # convert ‘position’ to numeric
     races_df = pd.read_csv(races_file)
     sprint_results_df = pd.read_csv(sprint_results_file)
+    sprint_results_df["position"] = pd.to_numeric(sprint_results_df["position"], errors = "coerce")
     recent_races = races_df["raceId"].unique()
     sprint_results_cleaned = sprint_results_df[sprint_results_df["raceId"].isin(recent_races)]
 
