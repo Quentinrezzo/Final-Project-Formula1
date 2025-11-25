@@ -17,7 +17,7 @@ def download_dataset(destination: str = "data/raw") -> Path:
 
     Args:
        destination (str): path (relative to the project root) where the CSV files will be copied.
-       Default: "data/raw".
+       Default: data/raw.
     Returns:
         Path: local path to the folder containing the CSV files.
     """
