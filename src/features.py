@@ -1,7 +1,7 @@
 """
 This file builds the feature tables used for modelling Formula 1 race outcomes.
 
-It starts from the cleaned and enhanced CSV files (2020–2025 seasons) and
+It starts from the cleaned and enriched CSV files (2020–2025 seasons) and
 creates higher-level features that will later be used by the modelling step,
 such as driver and team performance metrics, together with race and circuit
 characteristics.
@@ -10,6 +10,9 @@ characteristics.
 from pathlib import Path
 import pandas as pd
 import numpy as np
+
+# Import processed_direction from data_loader
+from src.data_loader import processed_direction
 
 def build_drivers_performance() -> Path:
     """

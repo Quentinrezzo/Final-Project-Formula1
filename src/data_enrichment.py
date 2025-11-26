@@ -1,11 +1,13 @@
 """
 This file contains functions that improve the cleaned dataset with additional information.
-The goal is to keep 'data_cleaning.py' focused on filtering cleaning (selecting years 2020-2025), while this file is used
-to add useful extra information that can later be used for feature engineering and modeling.
+The goal is to keep 'data_loader.py' focused on filtering cleaning (selecting years 2020-2025), while this file is used to add useful extra information that can later be used for feature engineering and modeling.
 """
 
 from pathlib import Path
 import pandas as pd
+
+# Import processed_direction from data_loader
+from src.data_loader import processed_direction
 
 def add_extra_info_on_circuits() -> Path:
     """
@@ -14,22 +16,27 @@ def add_extra_info_on_circuits() -> Path:
     - is_night_race: if the race is usually a night race (boolean)
     - track_type: simple label (technical, high_speed, balanced)
 
-    The columns are inserted between the 'alt' and 'url' columns.
+    The new columns are inserted between the 'alt' and 'url' columns.
 
     Returns:
         Path: Path to the updated 'circuits_cleaned.csv' file.
     """
 
     # Define the file path
-    circuits_cleaned = Path("Final-Project-Formula1/data/processed/circuits_cleaned.csv")
+    circuits_cleaned = processed_direction / "circuits_cleaned.csv"
 
     # Load the circuits_cleaned.csv file and prepare three new columns
-    circuits_df = pd.read_csv(circuits_cleaned)
+    try:
+        circuits_df = pd.read_csv(circuits_cleaned)
+    except Exception as e:
+        print(f"⚠️ Error loading {circuits_cleaned}: {e}")
+        return None
+        
     alt_index = circuits_df.columns.get_loc("alt")
     new_columns = ["length_km", "is_night_race", "track_type"]
 
     # Add three new columns
-    for col in (new_columns):
+    for col in new_columns:
         circuits_df.insert(alt_index + 1, col, pd.NA)
         alt_index += 1
 
@@ -42,9 +49,9 @@ def add_extra_info_on_circuits() -> Path:
         all_columns_present = all(col in check_df.columns for col in new_columns)
         
         if not all_columns_present:
-            print(f"❌ Columns not found in circuits_cleaned file saved to: {circuits_cleaned}")
+            print(f"❌ Some columns missing in saved file at {circuits_cleaned}")
         else:
-            print("✅ Columns successfully added:")
+            print(f"✅ New columns successfully added to circuits_cleaned.csv")
             print("   - length_km")
             print("   - is_night_race")
             print("   - track_type")
@@ -68,7 +75,7 @@ def fill_circuit_extra_info():
     """
 
     # Define the file path
-    circuits_cleaned = Path("Final-Project-Formula1/data/processed/circuits_cleaned.csv")
+    circuits_cleaned = processed_direction / "circuits_cleaned.csv"
 
     # Dictionary containing extra information mapped by CircuitId
     circuits_info = {
@@ -105,8 +112,18 @@ def fill_circuit_extra_info():
     }
 
     # Load the circuits_cleaned.csv file and add each row with dictionary values
-    df = pd.read_csv(circuits_cleaned)
+    try:
+        df = pd.read_csv(circuits_cleaned)
+    except Exception as e:
+        print(f"⚠️ Error loading {circuits_cleaned}: {e}")
+        return None
+
+    # Create new columns with correct dtypes to avoid pandas warnings
+    df["length_km"] = pd.Series(dtype = "float64")
+    df["is_night_race"] = pd.Series(dtype = "boolean")
+    df["track_type"] = pd.Series(dtype = "string")
     
+    # Fill values from dictionary
     for index, row in df.iterrows():
         circuitId = row["circuitId"]
         
@@ -115,9 +132,9 @@ def fill_circuit_extra_info():
             df.at[index, "is_night_race"] = circuits_info[circuitId]["is_night_race"]
             df.at[index, "track_type"] = circuits_info[circuitId]["track_type"]
         else:
-            print(f"⚠️ circuitId {circuitId} not found in dictionary, values left as NA.")
+            print(f"⚠️ circuitId {circuitId} not found in dictionary, values left as NA")
         
-    # Save back to file
+    # Save update file
     df.to_csv(circuits_cleaned, index = False)
 
     # Check
@@ -126,12 +143,12 @@ def fill_circuit_extra_info():
         all_info_in_columns = all(col in check_df.columns for col in ["length_km", "is_night_race", "track_type"])
         
         if not all_info_in_columns:
-            print(f"❌ Extra info in new columns not found in circuits_cleaned file saved to: {circuits_cleaned}")
+            print(f"❌ Extra info in new columns not found in {circuits_cleaned}")
         else:
             print("✅ circuits_cleaned.csv successfully updated with new circuit extra information")
 
     except Exception as e:
-        print(f"⚠️ Error while updating circuits_cleaned.csv: {e}")
+        print(f"⚠️ Error verifying updated file: {e}")
         return None
     
     return circuits_cleaned
@@ -147,10 +164,15 @@ def add_extra_info_on_races() -> Path:
     """
 
     # Define the file path
-    races_cleaned = Path("Final-Project-Formula1/data/processed/races_cleaned.csv")
+    races_cleaned = processed_direction / "races_cleaned.csv"
     
     # Load the races_cleaned.csv file and prepare the new column
-    races_df = pd.read_csv(races_cleaned)
+    try:
+        races_df = pd.read_csv(races_cleaned)
+    except Exception as e:
+        print(f"⚠️ Error loading {races_cleaned}: {e}")
+        return None
+        
     name_index = races_df.columns.get_loc("name")
     new_column = "race_distance_km"
     
@@ -165,9 +187,9 @@ def add_extra_info_on_races() -> Path:
         check_df = pd.read_csv(races_cleaned)
         
         if new_column not in check_df.columns:
-            print(f"❌ Column '{new_col}' not found in races_cleaned file saved to: {races_cleaned}")
+            print(f"❌ Column '{new_col}' not found in {races_cleaned}")
         else:
-            print("✅ Column successfully added:")
+            print("✅ Column successfully added to races_cleaned.csv")
             print(f"   - {new_column}")
 
     except Exception as e:
@@ -189,24 +211,28 @@ def fill_races_distance_km():
         Path: Path to the updated 'circuits_cleaned.csv' file.
     """
     # Define file paths
-    races_cleaned = Path("Final-Project-Formula1/data/processed/races_cleaned.csv")
-    circuits_cleaned = Path("Final-Project-Formula1/data/processed/circuits_cleaned.csv")
-    results_cleaned = Path("Final-Project-Formula1/data/processed/results_cleaned.csv")
+    races_cleaned = processed_direction / "races_cleaned.csv"
+    circuits_cleaned = processed_direction / "circuits_cleaned.csv"
+    results_cleaned = processed_direction / "results_cleaned.csv"
     
     # Load the CSV files needed
-    races_df = pd.read_csv(races_cleaned)
-    circuits_df = pd.read_csv(circuits_cleaned)
-    results_df = pd.read_csv(results_cleaned)
-
+    try:
+        races_df = pd.read_csv(races_cleaned)
+        circuits_df = pd.read_csv(circuits_cleaned)
+        results_df = pd.read_csv(results_cleaned)
+    except Exception as e:
+        print(f"⚠️ Error while reading one of the cleaned files: {e}")
+        return None
+        
     # Get the real number of laps per race (only finished drivers)
     finished = results_df[results_df["statusId"] == 1].copy()
     laps_by_race = (finished.groupby("raceId")["laps"].max().rename("laps_completed"))
 
-    # Get the length of each circuit and merge all you need
+    # Get the length of each circuit and merge
     merged = races_df.merge(circuits_df[["circuitId", "length_km"]], on = "circuitId", how = "left")
     merged = merged.merge(laps_by_race, on = "raceId", how = "left")
 
-    # Compute real distance in kilometers
+    # Compute race distance in kilometers
     races_df["race_distance_km"] = merged["length_km"] * merged["laps_completed"]
     races_df["race_distance_km"] = races_df["race_distance_km"].round(3)
 
