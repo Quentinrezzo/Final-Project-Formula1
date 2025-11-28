@@ -187,7 +187,7 @@ def add_extra_info_on_races() -> Path:
         check_df = pd.read_csv(races_cleaned)
         
         if new_column not in check_df.columns:
-            print(f"❌ Column '{new_col}' not found in {races_cleaned}")
+            print(f"❌ Column '{new_column}' not found in {races_cleaned}")
         else:
             print("✅ Column successfully added to races_cleaned.csv")
             print(f"   - {new_column}")
@@ -258,3 +258,78 @@ def fill_races_distance_km():
         return None
 
     return races_cleaned
+
+
+def add_status_dnf_categories() -> Path:
+    """
+    Add new columns to 'status_cleaned.csv' with simple DNF categories:
+    - is_mechanical: True if status is a mechanical/technical issue
+    - is_crash: True if status is a crash/accident/contact
+    - is_other_dnf:
+    
+    Returns:
+        Path: Path to the updated 'status_cleaned.csv' file.
+    """
+
+    # Define the file path
+    status_file = processed_direction / "status_cleaned.csv"
+
+    # Load data
+    try:
+        status_df = pd.read_csv(status_file)
+    except Exception as e:
+        print(f"⚠️ Error while reading {status_file}: {e}")
+        return None
+
+    # Classification
+    def classify_mech_crash_other(text: str) -> str:
+        
+        t = str(text).lower()
+
+        # Crash/accident/contact DNF
+        if any(word in t for word in ["accident", "collision", "crash", "contact", "spun off", "damage",]):
+            return "crash"
+
+        # Mechanical/technical DNF
+        if any(word in t for word in [
+            "engine", "gearbox", "hydraulics", "brakes", "suspension",
+            "exhaust", "clutch", "power", "fuel", "overheating",
+            "oil", "radiator", "turbo", "driveshaft", "mechanical",
+            "transmission", "electrical", "differential", "puncture",
+            "front wing", "water", "wheel", "steering", "electronics",
+            "Handling", "rear wing", "vibrations", "undertray", "cooling system",
+            "throttle", "technical", "handling",]):
+            return "mechanical"
+
+        # Other DNFs
+        if any(word in t for word in [
+            "retired", "withdrew", "disqualified", "illness", "debris", "underweight",]):
+            return "other_dnf"
+
+        return "no_dnf"
+
+    status_df["dnf_category"] = status_df["status"].apply(classify_mech_crash_other)
+    status_df["is_mechanical"] = status_df["dnf_category"] == "mechanical"
+    status_df["is_crash"] = status_df["dnf_category"] == "crash"
+    status_df["is_other_dnf"] = status_df["dnf_category"] == "other_dnf"
+    status_df["is_no_dnf"] = status_df["dnf_category"] == "no_dnf"
+
+    # Save updated file
+    status_df.to_csv(status_file, index = False)
+
+    # Check
+    try:
+        check_df = pd.read_csv(status_file)
+        expected_colums = ["statusId", "status", "dnf_category", "is_mechanical", "is_crash", "is_other_dnf", "is_no_dnf",]
+        
+        if not all(col in check_df.columns for col in expected_colums):
+            print(f"❌ Columns missing after enrichment in {status_file}")
+            return None
+        else:
+            print("✅ Column successfully added to status_cleaned.csv")
+            
+    except Exception as e:
+        print(f"⚠️ Error verifying updated file: {e}")
+        return None
+
+    return status_file
