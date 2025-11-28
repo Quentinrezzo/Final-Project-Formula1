@@ -876,9 +876,9 @@ def build_driver_circuits_performance() -> Path:
     df = race_df.copy()
     df["position"] = pd.to_numeric(df["position"], errors = "coerce").astype("Int64")
     df["win"] = df["position"] == 1
-    df["podium"] = df["position"].between(1, 3, inclusive="both")
-    df["top5"] = df["position"].between(1, 5, inclusive="both")
-    df["top10"] = df["position"].between(1, 10, inclusive="both")
+    df["podium"] = df["position"].between(1, 3, inclusive = "both")
+    df["top5"] = df["position"].between(1, 5, inclusive = "both")
+    df["top10"] = df["position"].between(1, 10, inclusive = "both")
 
     # Merge DNF categories from status_cleaned.csv
     status_small = status_df[["statusId", "is_mechanical", "is_crash", "is_other_dnf"]].copy()
@@ -1004,6 +1004,309 @@ def build_driver_circuits_performance() -> Path:
             
     except Exception as e:
         print(f"⚠️ Error while checking drivers_circuit_performance file: {e}")
+        return None
+
+    return output_file
+
+
+def build_model_dataset() -> Path:
+    """
+    Create the final modelling dataset at race-entry level.
+
+    It creates one row per driver/constructor in each race, with:
+    - base race information (grid, position, points, status, etc.),
+    - enriched status category (mechanical / crash / other / no_dnf),
+    - race and circuit data (year, round, distance, country, etc.),
+    - driver & constructor identity columns,
+    - global driver performance features,
+    - global constructor performance features,
+    - driver sprint performance features,
+    - driver qualifying performance features,
+    - driver-circuit performance features,
+    - target columns for the prediction tasks (win, top3, top10, points).
+
+    The final table is saved as: data/processed/model_dataset.csv
+
+    Returns:
+        Path: Path to the saved model_dataset.csv file.
+    """
+
+    # Define file paths
+    driver_race_file = processed_direction / "driver_race_base.csv"
+    drivers_perf_file = processed_direction / "drivers_performance.csv"
+    constructors_perf_file = processed_direction / "constructors_performance.csv"
+    sprint_perf_file = processed_direction / "drivers_sprint_performance.csv"
+    quali_perf_file = processed_direction / "drivers_qualifying_performance.csv"
+    circuit_perf_file = processed_direction / "drivers_circuit_performance.csv"
+    races_file = processed_direction / "races_cleaned.csv"
+    circuits_file = processed_direction / "circuits_cleaned.csv"
+    status_file = processed_direction / "status_cleaned.csv"
+    output_file = processed_direction / "model_dataset.csv"
+
+    # Load data
+    try:
+        base_df = pd.read_csv(driver_race_file)
+        drivers_perf_df = pd.read_csv(drivers_perf_file)
+        constructors_perf_df = pd.read_csv(constructors_perf_file)
+        sprint_perf_df = pd.read_csv(sprint_perf_file)
+        quali_perf_df = pd.read_csv(quali_perf_file)
+        circuit_perf_df = pd.read_csv(circuit_perf_file)
+        races_df = pd.read_csv(races_file)
+        circuits_df = pd.read_csv(circuits_file)
+        status_df = pd.read_csv(status_file)
+    except Exception as e:
+        print(f"⚠️ Error while reading input files for model dataset: {e}")
+        return None
+
+    # Start from base race-entry table
+    df = base_df.copy()
+
+    # We remove existing race/circuit columns to avoid duplicates later on
+    drop_base_cols = [
+        "year",
+        "round",
+        "circuitId",
+        "race_name",
+        "date",
+        "race_distance_km",
+        "name",
+        "location",
+        "country",
+        "alt",
+        "length_km",]
+
+    df = df.drop(columns = [c for c in drop_base_cols if c in df.columns]).copy()
+
+    # Merge status (mechanical / crash / other / no_dnf)
+    status_colums = ["statusId"]
+    status_colums += [c for c in ["is_mechanical", "is_crash", "is_other_dnf", "is_no_dnf"]
+                      if c in status_df.columns]
+
+    status_small = status_df[status_colums].copy()
+    df = df.merge(status_small, on = "statusId", how = "left")
+    df["dnf_category"] = (df["is_mechanical"] | df["is_crash"] | df["is_other_dnf"]).astype(int)
+
+    # Add race-level data (year, round, distance, etc.)
+    race_columns = [
+        "raceId",
+        "year",
+        "round",
+        "circuitId",
+        "race_name",
+        "date",
+        "race_distance_km",]
+
+    race_cols = [c for c in race_columns if c in races_df.columns]
+    races_small = races_df[race_cols].copy()
+    df = df.merge(races_small, on = "raceId", how = "left")
+    
+    # Add circuit-level data
+    circuit_columns = [
+        "circuitId",
+        "name",
+        "location",
+        "country",
+        "alt",
+        "length_km",
+        "is_night_race",
+        "track_type",]
+
+    circuit_cols = [c for c in circuit_columns if c in circuits_df.columns]
+    circuits_small = circuits_df[circuit_cols].copy()
+    
+    # Rename to avoid name conflicts
+    rename_map = {
+        "name": "circuit_name",
+        "location": "circuit_location",
+        "country": "circuit_country",}
+    
+    circuits_small = circuits_small.rename(columns = rename_map)
+    df = df.merge(circuits_small, on = "circuitId", how = "left")
+    
+    # Add global driver performance features
+    drv_drop = [c for c in ["driverRef", "forename", "surname", "driver_nationality"]
+                if c in drivers_perf_df.columns]
+
+    drivers_features = drivers_perf_df.drop(columns = drv_drop, errors = "ignore").copy()
+    drivers_features = drivers_features.add_prefix("drv_")
+
+    # bring driverId back to its original name
+    drivers_features = drivers_features.rename(columns = {"drv_driverId": "driverId"})
+    df = df.merge(drivers_features, on = "driverId", how = "left")
+
+    # Add global constructor performance features
+    const_drop = [c for c in ["constructor_name", "constructor_nationality"]
+                  if c in constructors_perf_df.columns]
+
+    constructors_features = constructors_perf_df.drop(columns = const_drop, errors = "ignore").copy()
+    constructors_features = constructors_features.add_prefix("team_")
+    constructors_features = constructors_features.rename(columns = {"team_constructorId": "constructorId"})
+    df = df.merge(constructors_features, on = "constructorId", how = "left")
+    df["team_consistency"] = df["team_consistency_index"]
+    df["constructorId"] = df["constructorId"].astype(int)
+
+    # Add driver sprint performance features
+    sprint_drop = [c for c in ["driverRef", "forename", "surname", "driver_nationality"]
+                   if c in sprint_perf_df.columns]
+
+    sprint_features = sprint_perf_df.drop(columns = sprint_drop, errors = "ignore").copy()
+    sprint_features = sprint_features.add_prefix("sprint_")
+    sprint_features = sprint_features.rename(columns = {"sprint_driverId": "driverId"})
+    df = df.merge(sprint_features, on = "driverId", how = "left")
+
+    # Add driver qualifying performance features
+    quali_drop = [c for c in ["driverRef", "forename", "surname", "driver_nationality"]
+                  if c in quali_perf_df.columns]
+
+    quali_features = quali_perf_df.drop(columns = quali_drop, errors = "ignore").copy()
+    quali_features = quali_features.add_prefix("quali_")
+    quali_features = quali_features.rename(columns = {"quali_driverId": "driverId"})
+    df = df.merge(quali_features, on = "driverId", how = "left")
+
+    # Add driver-circuit performance features
+    dc_drop = [c for c in ["driverRef", "forename", "surname", "driver_nationality"]
+               if c in circuit_perf_df.columns]
+
+    driver_circuit_features = circuit_perf_df.drop(columns = dc_drop, errors = "ignore").copy()
+    driver_circuit_features = driver_circuit_features.add_prefix("circ_")
+    driver_circuit_features = driver_circuit_features.rename(columns = {"circ_driverId": "driverId", "circ_circuitId": "circuitId",})
+    df = df.merge(driver_circuit_features, on = ["driverId", "circuitId"], how = "left")
+
+    # Numerical columns
+    df[["position", "grid", "points"]] = df[["position", "grid", "points"]].apply(pd.to_numeric, errors = "coerce")
+
+    # Resolve duplicate columns with _x / _y suffixes
+    duplicate_sets = [
+        ("circuit_name_x", "circuit_name_y", "circuit_name"),
+        ("is_night_race_x", "is_night_race_y", "is_night_race"),
+        ("track_type_x", "track_type_y", "track_type"),]
+
+    for col_x, col_y, final in duplicate_sets:
+        if col_x in df.columns and col_y in df.columns:
+            df[final] = df[col_x].combine_first(df[col_y])
+            df = df.drop(columns = [col_x, col_y])
+        elif col_x in df.columns:
+            df = df.rename(columns = {col_x: final})
+        elif col_y in df.columns:
+            df = df.rename(columns = {col_y: final})
+
+    # Create target columns
+    df["target_win"] = (df["position"] == 1).astype(int)
+    df["target_top3"] = df["position"].between(1, 3, inclusive = "both").astype(int)
+    df["target_top10"] = df["position"].between(1, 10, inclusive = "both").astype(int)
+    df["target_points"] = (df["points"] > 0).astype(int)
+
+    # Basic missing-value handling
+
+    # Numeric features -> 0
+    num_columns = df.select_dtypes(include = ["number", "float64", "int64", "Int64"]).columns
+    df[num_columns] = df[num_columns].fillna(0)
+
+    # Text / categorical features -> Unknown
+    category_columns = df.select_dtypes(include = ["object"]).columns
+    df[category_columns] = df[category_columns].fillna("Unknown")
+
+    # Sort
+    key_columns = [
+        "raceId",
+        "driverId",
+        "constructorId",
+        "circuitId",
+        "grid",
+        "position",
+        "points",
+        "laps",
+        "milliseconds",
+        "statusId",
+        "year",
+        "round",
+        "date",
+        "race_distance_km",
+        "is_night_race",
+        "track_type",
+        "circuit_name",
+        "circuit_location",
+        "circuit_country",
+        "alt",
+        "length_km",
+        "driverRef",
+        "code",
+        "forename",
+        "surname",
+        "driver_nationality",
+        "constructorRef",
+        "constructor_name",
+        "constructor_nationality",
+        "is_mechanical",
+        "is_crash",
+        "is_other_dnf",
+        "is_no_dnf",
+        "dnf_category",]
+    
+    metric_order = [
+        "races_count",
+        "finished_races",
+        "finish_rate",
+        "dnf_count",
+        "dnf_rate",
+        "mech_dnf_count",
+        "mech_dnf_rate",
+        "crash_dnf_count",
+        "crash_dnf_rate",
+        "other_dnf_count",
+        "reliability_rate",
+        "win_count",
+        "podiums",
+        "top10_finishes",
+        "top8_finishes",
+        "avg_finish_position",
+        "med_finish_position",
+        "std_finish_position",
+        "total_points",
+        "points_per_race",
+        "points_per_sprint",
+        "points_scored",
+        "consistency_index",
+        "performance_score",]
+    
+    perf_prefixes = ["drv_", "team_", "sprint_", "quali_", "circ_"]
+    
+    ordered_first = [c for c in key_columns if c in df.columns]
+    perf_cols = []
+    for prefix in perf_prefixes:
+        for metric in metric_order:
+            col = prefix + metric
+            if col in df.columns:
+                perf_cols.append(col)
+        
+        remaining_prefixed = [c for c in df.columns if c.startswith(prefix) and c not in perf_cols]
+        perf_cols.extend(remaining_prefixed)
+    
+    already_used = set(ordered_first) | set(perf_cols)
+    other_cols = [c for c in df.columns if c not in already_used]
+        
+    df = df[ordered_first + perf_cols + other_cols]
+    
+    # Save new table to 'processed' folder
+    df.to_csv(output_file, index = False)
+    
+    # Check
+    try:
+        check_df = pd.read_csv(output_file)
+        expected_columns = ordered_first + perf_cols + other_cols
+        
+        all_columns_present = all(col in check_df.columns for col in expected_columns)
+        
+        if not all_columns_present:
+            print(f"❌ Columns missing in model_dataset file saved to: {output_file}")
+            return None
+        else:
+            print("✅ model_dataset successfully created and filled")
+            print(f"📁 Saved to: {output_file}")
+            print(f" Rows: {len(check_df)} | Columns: {len(check_df.columns)}")
+            
+    except Exception as e:
+        print(f"⚠️ Error while checking model_dataset file: {e}")
         return None
 
     return output_file
