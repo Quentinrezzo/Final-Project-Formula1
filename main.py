@@ -8,7 +8,7 @@ Pipeline:
 4. Filter races to recent seasons (2020–2025) and all race-based tables.
 5. Filter dimension tables (circuits, constructors, drivers, seasons, status).
 6. Enriched processed tables (circuits, races, status) with extra information.
-7. Create feature performance tables (drivers/constructors/sprint/qualifying/circuits)
+7. Create progressive feature performance tables (drivers/constructors/sprint/qualifying/driver-circuit)
 """
 
 from pathlib import Path
@@ -36,14 +36,14 @@ from src.data_enrichment import (
     fill_races_distance_km,
     add_status_dnf_categories,)
 
-# 7) Feature performance tables
+# 7) Progressive feature performance tables
 from src.features import (
     build_driver_race_base,
-    build_drivers_performance,
-    build_constructors_performance,
-    build_sprint_performance,
-    build_qualifying_performance,
-    build_driver_circuits_performance,)
+    build_driver_progressive_performance,
+    build_constructor_progressive_performance,
+    build_sprint_progressive_performance,
+    build_qualifying_progressive_performance,
+    build_driver_circuits_progressive_performance,)
 
 
 def main() -> None:
@@ -161,8 +161,8 @@ def main() -> None:
         return
     print("✅ Status categories enriched (mech/crash/other/no_dnf)")
 
-    # 7. Create feature performance tables
-    print("\n🟦 STEP 7 – Build feature tables")
+    # 7. Create progressive feature performance tables
+    print("\n🟦 STEP 7 – Build progressive feature performance tables")
 
     # 7.1 Base driver-race table
     print("\n Building driver_race_base.csv ...")
@@ -173,44 +173,44 @@ def main() -> None:
     print(f"✅ driver_race_base created: {driver_race_base_file}")
 
     # 7.2 Drivers performance
-    print("\n Building drivers_performance.csv ...")
-    drivers_perf_file = build_drivers_performance()
+    print("\n Building driver_progressive_performance.csv ...")
+    drivers_perf_file = build_driver_progressive_performance()
     if drivers_perf_file is None:
-        print("❌ Error in build_drivers_performance()")
+        print("❌ Error in build_driver_progressive_performance()")
         return
-    print(f"✅ drivers_performance created: {drivers_perf_file}")
+    print(f"✅ driver_progressive_performance created: {drivers_perf_file}")
 
     # 7.3 Constructors performance
-    print("\n Building constructors_performance.csv ...")
-    constructors_perf_file = build_constructors_performance()
+    print("\n Building constructor_progressive_performance.csv ...")
+    constructors_perf_file = build_constructor_progressive_performance()
     if constructors_perf_file is None:
-        print("❌ Error in build_constructors_performance()")
+        print("❌ Error in build_constructor_progressive_performance()")
         return
-    print(f"✅ constructors_performance created: {constructors_perf_file}")
+    print(f"✅ constructor_progressive_performance created: {constructors_perf_file}")
 
     # 7.4 Sprint performance per driver
-    print("\n Building drivers_sprint_performance.csv ...")
-    sprint_perf_file = build_sprint_performance()
+    print("\n Building sprint_progressive_performance.csv ...")
+    sprint_perf_file = build_sprint_progressive_performance()
     if sprint_perf_file is None:
-        print("❌ Error in build_sprint_performance()")
+        print("❌ Error in build_sprint_progressive_performance()")
         return
-    print(f"✅ drivers_sprint_performance created: {sprint_perf_file}")
+    print(f"✅ sprint_progressive_performance created: {sprint_perf_file}")
 
     # 7.5 Qualifying performance per driver
-    print("\n Building drivers_qualifying_performance.csv ...")
-    quali_perf_file = build_qualifying_performance()
+    print("\n Building qualifying_progressive_performance.csv ...")
+    quali_perf_file = build_qualifying_progressive_performance()
     if quali_perf_file is None:
-        print("❌ Error in build_qualifying_performance()")
+        print("❌ Error in build_qualifying_progressive_performance()")
         return
-    print(f"✅ drivers_qualifying_performance created: {quali_perf_file}")
+    print(f"✅ qualifying_progressive_performance created: {quali_perf_file}")
 
     # 7.6 Driver x circuit performance
-    print("\n Building drivers_circuit_performance.csv ...")
-    circuits_perf_file = build_driver_circuits_performance()
+    print("\n Building driver_circuits_progressive_performance.csv ...")
+    circuits_perf_file = build_driver_circuits_progressive_performance()
     if circuits_perf_file is None:
-        print("❌ Error in build_driver_circuits_performance()")
+        print("❌ Error in build_driver_circuits_progressive_performance()")
         return
-    print(f"✅ drivers_circuit_performance created: {circuits_perf_file}")
+    print(f"✅ driver_circuits_progressive_performance created: {circuits_perf_file}")
 
 
     
