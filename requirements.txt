@@ -6,6 +6,9 @@ matplotlib
 seaborn
 openpyxl
 
+# XGBoost model
+xgboost
+
 # Kaggle dataset handling
 kagglehub # to download datasets directly via KaggleHub
 kaggle # Kaggle API for alternative dataset access
@@ -13,6 +16,7 @@ kaggle # Kaggle API for alternative dataset access
 # Development tools
 jupyter
 notebook
+ipykernel
 ipywidgets # to make progress bars work
 black # code formatting (PEP8 compliance)
 flake8 # linting

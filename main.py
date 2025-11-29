@@ -8,7 +8,7 @@ Pipeline:
 4. Filter races to recent seasons (2020–2025) and all race-based tables.
 5. Filter dimension tables (circuits, constructors, drivers, seasons, status).
 6. Enriched processed tables (circuits, races, status) with extra information.
-7. Create feature performance tables (drivers/constructors/sprint/qualifying/circuits).
+7. Create feature performance tables (drivers/constructors/sprint/qualifying/circuits)
 """
 
 from pathlib import Path
@@ -211,6 +211,20 @@ def main() -> None:
         print("❌ Error in build_driver_circuits_performance()")
         return
     print(f"✅ drivers_circuit_performance created: {circuits_perf_file}")
+
+
+    
+
+    
+    # 8. Build final modelling dataset
+    print("\n=== Step 7: Build final modelling dataset ===")
+    model_file = build_model_dataset()
+    if model_file is None:
+        print("❌ Error while building model_dataset.csv")
+        return
+    else:
+        print(f"✅ model_dataset.csv successfully created")
+        print(f"📂 Saved to: {model_file}")
 
 
 
