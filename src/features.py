@@ -25,7 +25,7 @@ from pathlib import Path
 import pandas as pd
 import numpy as np
 
-# Import processed_direction from features
+# Import processed_direction
 from .data_loader import processed_direction
 
 def build_driver_race_base() -> Path:
@@ -203,7 +203,7 @@ def build_driver_progressive_performance() -> Path:
       - starts from race-level data in driver_race_base.csv
       - counts races, finishes, DNFs, wins, podiums, top-10, points
       - builds a cumulative history over seasons for each driver
-        (e.g. 2022 = all races from 2020 + 2021 + 2022)
+        (e.g. 2022 = all races from 2020 + 2021)
       - recomputes the main rate features from these cumulative counts:
         finish_rate, dnf_rate, mech/crash/other_dnf_rate, reliability_rate,
         points_per_race.
@@ -292,7 +292,8 @@ def build_driver_progressive_performance() -> Path:
 
     # cumulative sum by driver over years
     for col in cum_columns:
-        grouped_all[col] = grouped_all.groupby("driverId")[col].cumsum()
+        history = grouped_all.groupby("driverId")[col].cumsum().shift(1)
+        grouped_all[col] = history.fillna(0)
 
     # Recompute Derived rates and scores from cumulative counts
     races_nonzero = grouped_all["races_count"].replace(0, np.nan)
@@ -393,7 +394,7 @@ def build_constructor_progressive_performance() -> Path:
       - starts from race-level data in driver_race_base.csv
       - counts races, finishes, DNFs, wins, podiums, top-10, points
       - builds a cumulative history over seasons for each constructor
-        (e.g. 2022 = all races from 2020 + 2021 + 2022)
+        (e.g. 2022 = all races from 2020 + 2021)
       - recomputes the main rate features from these cumulative counts:
         finish_rate, dnf_rate, mech/crash/other_dnf_rate, reliability_rate,
         points_per_race.
@@ -481,7 +482,8 @@ def build_constructor_progressive_performance() -> Path:
 
     # cumulative sum by constructor over years
     for col in cum_columns:
-        grouped_all[col] = grouped_all.groupby("constructorId")[col].cumsum()
+        history = grouped_all.groupby("constructorId")[col].cumsum().shift(1)
+        grouped_all[col] = history.fillna(0)
 
     # Recompute derived rates and scores from cumulative counts
     races_nonzero = grouped_all["races_count"].replace(0, np.nan)
@@ -581,7 +583,7 @@ def build_sprint_progressive_performance() -> Path:
       - starts from sprint-level data in sprint_results_cleaned.csv
       - counts sprints, finishes, DNFs, wins, podiums, top-8, points
       - builds a cumulative history over seasons for each driver
-        (e.g. 2022 = all races from 2020 + 2021 + 2022)
+        (e.g. 2022 = all races from 2020 + 2021)
       - recomputes the main rate features from these cumulative counts:
         finish_rate, dnf_rate, mech/crash/other_dnf_rate, reliability_rate,
         points_per_race.
@@ -681,9 +683,10 @@ def build_sprint_progressive_performance() -> Path:
         "pos_sum",
         "pos_sq_sum",]
 
-    # cumulative sum by constructor over years
+    # cumulative sum by driver over years
     for col in cum_columns:
-        grouped_all[col] = grouped_all.groupby("driverId")[col].cumsum()
+        history = grouped_all.groupby("driverId")[col].cumsum().shift(1)
+        grouped_all[col] = history.fillna(0)
         
     # Recompute derived rates and scores from cumulative counts
     races_nonzero = grouped_all["races_count"].replace(0, np.nan)
@@ -785,7 +788,7 @@ def build_qualifying_progressive_performance() -> Path:
       - counts qualifying sessions, valid sessions, poles, front-row starts,
         top-5 / top-10 starts, Q2 / Q3 appearances
       - builds a cumulative history over seasons for each driver
-        (e.g. 2022 = all races from 2020 + 2021 + 2022)
+        (e.g. 2022 = all races from 2020 + 2021)
       - recomputes the main rate features from these cumulative counts:
         sessions_rate, pole_rate, q3_rate, consistency_index,
         qualifying_performance_score.
@@ -867,9 +870,10 @@ def build_qualifying_progressive_performance() -> Path:
         "pos_sum",
         "pos_sq_sum",]
 
-    # cumulative sum by constructor over years
+    # cumulative sum by driver over years
     for col in cum_columns:
-        grouped_all[col] = grouped_all.groupby("driverId")[col].cumsum()
+        history = grouped_all.groupby("driverId")[col].cumsum().shift(1)
+        grouped_all[col] = history.fillna(0)
     
     # Recompute derived rates and scores from cumulative counts
     sessions_nonzero = grouped_all["sessions_count"].replace(0, np.nan)
@@ -966,7 +970,7 @@ def build_driver_circuits_progressive_performance() -> Path:
       - starts from race-level data in driver_race_base.csv
       - counts races, finishes, DNFs, wins, podiums, top-5, top-10, points
       - builds a cumulative history over seasons for each driver-circuit
-        (e.g. 2022 = all races from 2020 + 2021 + 2022)
+        (e.g. 2022 = all races from 2020 + 2021)
       - recomputes the main rate features from these cumulative counts:
         finish_rate, dnf_rate, mech/crash/other_dnf_rate, reliability_rate,
         points_per_race.
@@ -1059,7 +1063,8 @@ def build_driver_circuits_progressive_performance() -> Path:
     
     # cumulative sum by driver and circuit over years
     for col in cum_cols:
-        grouped_all[col] = grouped_all.groupby(["driverId", "circuitId"])[col].cumsum()
+        history = grouped_all.groupby(["driverId", "circuitId"])[col].cumsum().shift(1)
+        grouped_all[col] = history.fillna(0)
 
     # Recompute derived rates and scores from cumulative counts
     races_nonzero = grouped_all["races_count"].replace(0, np.nan)
@@ -1143,6 +1148,19 @@ def build_driver_circuits_progressive_performance() -> Path:
 
     return output_file
 
+"""
+    # Limit to recent seasons to reduce kernel crashes
+    base_df = base_df[(base_df["year"] >= year_min) & (base_df["year"] <= year_max)].copy()
+
+    for perf_df in [drivers_perf_df, constructors_perf_df,
+                    sprint_perf_df, quali_perf_df, circuit_perf_df, races_df]:
+        if "year" in perf_df.columns:
+            mask = (perf_df["year"] >= year_min) & (perf_df["year"] <= year_max)
+            perf_df.drop(perf_df.index[~mask], inplace = True)
+    
+    # Start from base race-entry table
+    df = base_df.copy()
+"""
 
 def build_model_dataset() -> Path:
     """
@@ -1153,11 +1171,11 @@ def build_model_dataset() -> Path:
     - enriched status category (mechanical / crash / other / no_dnf),
     - race and circuit data (year, round, distance, country, etc.),
     - driver & constructor identity columns,
-    - global driver performance features,
-    - global constructor performance features,
-    - driver sprint performance features,
-    - driver qualifying performance features,
-    - driver-circuit performance features,
+    - global progressive driver performance features,
+    - global progressive constructor performance features,
+    - driver progressive sprint performance features,
+    - driver progressive qualifying performance features,
+    - driver-circuit progressive performance features,
     - target columns for the prediction tasks (win, top3, top10, points).
 
     The final table is saved as: data/processed/model_dataset.csv
@@ -1192,20 +1210,9 @@ def build_model_dataset() -> Path:
     except Exception as e:
         print(f"⚠️ Error while reading input files for model dataset: {e}")
         return None
-
-    # Limit to recent seasons to reduce memory usage
-    year_min, year_max = 2023, 2025
-    base_df = base_df[(base_df["year"] >= year_min) & (base_df["year"] <= year_max)].copy()
-    drivers_perf_df = drivers_perf_df[(drivers_perf_df["year"] >= year_min) & (drivers_perf_df["year"] <= year_max)].copy()
-    constructors_perf_df = constructors_perf_df[(constructors_perf_df["year"] >= year_min) & (constructors_perf_df["year"] <= year_max)].copy()
-    sprint_perf_df = sprint_perf_df[(sprint_perf_df["year"] >= year_min) & (sprint_perf_df["year"] <= year_max)].copy()
-    quali_perf_df = quali_perf_df[(quali_perf_df["year"] >= year_min) & (quali_perf_df["year"] <= year_max)].copy()
-    circuit_perf_df = circuit_perf_df[(circuit_perf_df["year"] >= year_min) & (circuit_perf_df["year"] <= year_max)].copy()
-    races_df = races_df[(races_df["year"] >= year_min) & (races_df["year"] <= year_max)].copy()
-    
-    # Start from base race-entry table
+        
     df = base_df.copy()
-
+    
     # We remove existing race/circuit columns to avoid duplicates later on
     drop_base_cols = [
         "year",
@@ -1268,82 +1275,86 @@ def build_model_dataset() -> Path:
     circuits_small = circuits_small.rename(columns = rename_map)
     df = df.merge(circuits_small, on = "circuitId", how = "left")
     
-    # Add global driver performance features
+    # Add global progressive driver performance features
     drv_drop = [c for c in ["driverRef", "forename", "surname", "driver_nationality"]
                 if c in drivers_perf_df.columns]
 
     drivers_features = drivers_perf_df.drop(columns = drv_drop, errors = "ignore").copy()
     drivers_features = drivers_features.add_prefix("drv_")
-    drivers_features = drivers_features.rename(columns = {"drv_driverId": "driverId"})
-    df = df.merge(drivers_features, on = "driverId", how = "left")
+    drivers_features = drivers_features.rename(columns = {"drv_driverId": "driverId", "drv_year": "year"})
+    df = df.merge(drivers_features, on = ["driverId", "year"], how = "left")
 
-    # Add global constructor performance features
+    # Add global progressive constructor performance features
     const_drop = [c for c in ["constructor_name", "constructor_nationality"]
                   if c in constructors_perf_df.columns]
 
     constructors_features = constructors_perf_df.drop(columns = const_drop, errors = "ignore").copy()
     constructors_features = constructors_features.add_prefix("team_")
-    constructors_features = constructors_features.rename(columns = {"team_constructorId": "constructorId"})
-    df = df.merge(constructors_features, on = "constructorId", how = "left")
+    constructors_features = constructors_features.rename(columns = {"team_constructorId": "constructorId", "team_year": "year"})
+    df = df.merge(constructors_features, on = ["constructorId", "year"], how = "left")
 
-    # Add driver sprint performance features
+    # Add driver progressive sprint performance features
     sprint_drop = [c for c in ["driverRef", "forename", "surname", "driver_nationality"]
                    if c in sprint_perf_df.columns]
 
     sprint_features = sprint_perf_df.drop(columns = sprint_drop, errors = "ignore").copy()
     sprint_features = sprint_features.add_prefix("sprint_")
-    sprint_features = sprint_features.rename(columns = {"sprint_driverId": "driverId"})
-    df = df.merge(sprint_features, on = "driverId", how = "left")
+    sprint_features = sprint_features.rename(columns = {"sprint_driverId": "driverId", "sprint_year": "year"})
+    df = df.merge(sprint_features, on = ["driverId", "year"], how = "left")
 
-    # Add driver qualifying performance features
+    # Add driver progressive qualifying performance features
     quali_drop = [c for c in ["driverRef", "forename", "surname", "driver_nationality"]
                   if c in quali_perf_df.columns]
 
     quali_features = quali_perf_df.drop(columns = quali_drop, errors = "ignore").copy()
     quali_features = quali_features.add_prefix("quali_")
-    quali_features = quali_features.rename(columns = {"quali_driverId": "driverId"})
-    df = df.merge(quali_features, on = "driverId", how = "left")
+    quali_features = quali_features.rename(columns = {"quali_driverId": "driverId", "quali_year": "year"})
+    df = df.merge(quali_features, on = ["driverId", "year"], how = "left")
 
-    # Add driver-circuit performance features
+    # Add driver-circuit progressive performance features
     dc_drop = [c for c in ["driverRef", "forename", "surname", "driver_nationality"]
                if c in circuit_perf_df.columns]
 
     driver_circuit_features = circuit_perf_df.drop(columns = dc_drop, errors = "ignore").copy()
     driver_circuit_features = driver_circuit_features.add_prefix("circ_")
-    driver_circuit_features = driver_circuit_features.rename(columns = {"circ_driverId": "driverId", "circ_circuitId": "circuitId",})
-    df = df.merge(driver_circuit_features, on = ["driverId", "circuitId"], how = "left")
+    driver_circuit_features = driver_circuit_features.rename(columns = {"circ_driverId": "driverId", "circ_circuitId": "circuitId", "circ_year": "year",})
+    df = df.merge(driver_circuit_features, on = ["driverId", "circuitId", "year"], how = "left")
 
     # Numerical columns
     df[["position", "grid", "points"]] = df[["position", "grid", "points"]].apply(pd.to_numeric, errors = "coerce")
-
-    # Resolve duplicate columns with _x / _y suffixes
-    duplicate_sets = [
-        ("circuit_name_x", "circuit_name_y", "circuit_name"),
-        ("is_night_race_x", "is_night_race_y", "is_night_race"),
-        ("track_type_x", "track_type_y", "track_type"),]
-
-    for col_x, col_y, final in duplicate_sets:
-        if col_x in df.columns and col_y in df.columns:
-            df[final] = df[col_x].combine_first(df[col_y])
-            df = df.drop(columns = [col_x, col_y])
-        elif col_x in df.columns:
-            df = df.rename(columns = {col_x: final})
-        elif col_y in df.columns:
-            df = df.rename(columns = {col_y: final})
 
     # Create target columns
     df["target_win"] = (df["position"] == 1).astype(int)
     df["target_top3"] = df["position"].between(1, 3, inclusive = "both").astype(int)
     df["target_top10"] = df["position"].between(1, 10, inclusive = "both").astype(int)
-    df["target_points"] = (df["points"] > 0).astype(int)
+    
+    # Resolve duplicate columns with _x / _y siffixes
+    duplicate_sets = [
+        ("circuit_name_x", "circuit_name_y", "circuit_name"),
+        ("is_night_race_x", "is_night_race_y", "is_night_race"),
+        ("track_type_x", "track_type_y", "track_type"),]
+    
+    for col_x, col_y, final in duplicate_sets:
+        if col_x in df.columns and col_y in df.columns:
+            df[final] = df[col_x].combine_first(df[col_y])
+            df = df.drop(columns=[col_x, col_y])
+        
+        elif col_x in df.columns:
+            df = df.rename(columns={col_x: final})
+        
+        elif col_y in df.columns:
+            df = df.rename(columns={col_y: final})
 
+    # Encode track_type (string -> category codes)
+    if "track_type" in df.columns:
+        df["track_type"] = df["track_type"].astype("category").cat.codes
+        
     # Basic missing-value handling
 
-    # Numeric features -> 0
+    # Missing values
     num_columns = df.select_dtypes(include = ["number", "float64", "int64", "Int64"]).columns
     df[num_columns] = df[num_columns].fillna(0)
-
-    # Text / categorical features -> Unknown
+    
     category_columns = df.select_dtypes(include = ["object"]).columns
     df[category_columns] = df[category_columns].fillna("Unknown")
 
@@ -1354,44 +1365,17 @@ def build_model_dataset() -> Path:
         "constructorId",
         "circuitId",
         "grid",
-        "position",
-        "points",
-        "laps",
-        "milliseconds",
-        "statusId",
         "year",
         "round",
-        "date",
         "race_distance_km",
         "is_night_race",
         "track_type",
-        "circuit_name",
-        "circuit_location",
-        "circuit_country",
         "alt",
-        "length_km",
-        "driverRef",
-        "code",
-        "forename",
-        "surname",
-        "driver_nationality",
-        "constructorRef",
-        "constructor_name",
-        "constructor_nationality",
-        "is_mechanical",
-        "is_crash",
-        "is_other_dnf",
-        "is_no_dnf",
-        "dnf_category",]
+        "length_km",]
     
     metric_order = [
         "races_count",
         "finished_races",
-        "sessions_count",
-        "sessions_quali",
-        "sessions_rate",
-        "valid_quali",
-        "valid_rate",
         "finish_rate",
         "dnf_count",
         "dnf_rate",
@@ -1400,9 +1384,13 @@ def build_model_dataset() -> Path:
         "crash_dnf_count",
         "crash_dnf_rate",
         "other_dnf_count",
+        "other_dnf_rate",
         "reliability_rate",
         "win_count",
         "podiums",
+        "sessions_count",
+        "sessions_quali",
+        "sessions_rate",
         "top5_finishes",
         "top8_finishes",
         "top10_finishes",
@@ -1410,15 +1398,14 @@ def build_model_dataset() -> Path:
         "pole_count",
         "pole_rate",
         "front_row_count",
+        "front_row_rate",
         "q1_appearances",
         "q2_appearances",
         "q3_appearances",
         "q3_rate",
         "avg_finish_position",
-        "med_finish_position",
         "std_finish_position",
         "avg_quali_position",
-        "med_quali_position",
         "std_quali_position",
         "total_points",
         "points_per_race",
@@ -1430,20 +1417,57 @@ def build_model_dataset() -> Path:
     perf_prefixes = ["drv_", "team_", "sprint_", "quali_", "circ_"]
     
     ordered_first = [c for c in key_columns if c in df.columns]
-    perf_cols = []
+    perf_cols: list[str] = []
     for prefix in perf_prefixes:
         for metric in metric_order:
             col = prefix + metric
             if col in df.columns:
                 perf_cols.append(col)
         
-        remaining_prefixed = [c for c in df.columns if c.startswith(prefix) and c not in perf_cols]
+        remaining_prefixed = [c for c in df.columns 
+                              if c.startswith(prefix) and c not in perf_cols]
         perf_cols.extend(remaining_prefixed)
     
     already_used = set(ordered_first) | set(perf_cols)
     other_cols = [c for c in df.columns if c not in already_used]
         
     df = df[ordered_first + perf_cols + other_cols]
+
+    # Remove leakage and low value columns
+    leakage_cols = [
+        "position",
+        "points",
+        "laps",
+        "milliseconds",
+        "statusId",
+        "is_mechanical",
+        "is_crash",
+        "is_other_dnf",
+        "is_no_dnf",
+        "dnf_category",
+        "drv_year",
+        "team_year",
+        "sprint_year",
+        "quali_year",
+        "circ_year",
+        "team_constructorRef",]
+
+    low_value_cols = [
+        "race_name",
+        "date",
+        "driverRef",
+        "code",
+        "forename",
+        "surname",
+        "driver_nationality",
+        "constructorRef",
+        "constructor_name",
+        "constructor_nationality",
+        "circuit_name",
+        "circuit_location",
+        "circuit_country",]
+    
+    df = df.drop(columns = [c for c in (leakage_cols + low_value_cols) if c in df.columns])
     
     # Save new table to 'processed' folder
     df.to_csv(output_file, index = False)
@@ -1451,18 +1475,10 @@ def build_model_dataset() -> Path:
     # Check
     try:
         check_df = pd.read_csv(output_file)
-        expected_columns = ordered_first + perf_cols + other_cols
+        print("✅ model_dataset successfully created and filled")
+        print(f"📁 Saved to: {output_file}")
+        print(f" Rows: {len(check_df)} | Columns: {len(check_df.columns)}")
         
-        all_columns_present = all(col in check_df.columns for col in expected_columns)
-        
-        if not all_columns_present:
-            print(f"❌ Columns missing in model_dataset file saved to: {output_file}")
-            return None
-        else:
-            print("✅ model_dataset successfully created and filled")
-            print(f"📁 Saved to: {output_file}")
-            print(f" Rows: {len(check_df)} | Columns: {len(check_df.columns)}")
-            
     except Exception as e:
         print(f"⚠️ Error while checking model_dataset file: {e}")
         return None

@@ -2,13 +2,14 @@
 Main entry point for the Formula 1 race outcome prediction project.
 
 Pipeline:
-1. Downloads the Kaggle dataset into data/raw/.
-2. Lists the available CSV files in data/raw/.
-3. Ensure data/processed/ exists.
-4. Filter races to recent seasons (2020–2025) and all race-based tables.
-5. Filter dimension tables (circuits, constructors, drivers, seasons, status).
-6. Enriched processed tables (circuits, races, status) with extra information.
+1. Downloads the Kaggle dataset into data/raw/
+2. Lists the available CSV files in data/raw/
+3. Ensure data/processed/ exists
+4. Filter races to recent seasons (2020–2025) and all race-based tables
+5. Filter dimension tables (circuits, constructors, drivers, seasons, status)
+6. Enriched processed tables (circuits, races, status) with extra information
 7. Create progressive feature performance tables (drivers/constructors/sprint/qualifying/driver-circuit)
+8. Create the final modelling dataset (model_dataset.csv) from the progressive performance tables
 """
 
 from pathlib import Path
@@ -36,14 +37,15 @@ from src.data_enrichment import (
     fill_races_distance_km,
     add_status_dnf_categories,)
 
-# 7) Progressive feature performance tables
+# 7,8) Progressive feature performance tables and final modelling dataset
 from src.features import (
     build_driver_race_base,
     build_driver_progressive_performance,
     build_constructor_progressive_performance,
     build_sprint_progressive_performance,
     build_qualifying_progressive_performance,
-    build_driver_circuits_progressive_performance,)
+    build_driver_circuits_progressive_performance,
+    build_model_dataset,)
 
 
 def main() -> None:
@@ -211,13 +213,9 @@ def main() -> None:
         print("❌ Error in build_driver_circuits_progressive_performance()")
         return
     print(f"✅ driver_circuits_progressive_performance created: {circuits_perf_file}")
-
-
     
-
-    
-    # 8. Build final modelling dataset
-    print("\n=== Step 7: Build final modelling dataset ===")
+    # 8. Create final modelling dataset
+    print("\n🟦 STEP 8 – Build final modelling dataset")
     model_file = build_model_dataset()
     if model_file is None:
         print("❌ Error while building model_dataset.csv")

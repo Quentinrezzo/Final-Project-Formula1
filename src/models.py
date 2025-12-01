@@ -5,16 +5,17 @@ predictive models for Formula 1 race outcomes.
 
 from pathlib import Path
 import pandas as pd
+import xgboost as xgb
 from xgboost import XGBClassifier
 from sklearn.metrics import roc_auc_score, accuracy_score
 
-# Import processed_direction from features.py
-from .features import processed_direction
+# Import processed_direction
+from .data_loader import processed_direction
 
 def train_val_test_split_by_year(
     df: pd.DataFrame,
     target_col: str = "target_top10",
-    train_years = (2020, 2021, 2022, 2023),
+    train_years = (2020, 2021, 2022,2023),
     val_years = (2024,),
     test_years = (2025,),):
     """
@@ -22,33 +23,22 @@ def train_val_test_split_by_year(
     
     Returns (X_train, y_train, X_val, y_val, X_test, y_test).
     """
+    
+    target_columns = [c for c in df.columns if c.startswith("target_")]
+    feature_columns = [c for c in df.columns if c not in target_columns]
 
-    # Columns to exclude from features (raw results + targets)
-    leak_cols = [
-        "position",
-        "points",
-        "laps",
-        "milliseconds",
-        "statusId",
-        "is_mechanical",
-        "is_crash",
-        "is_other_dnf",
-        "is_no_dnf",
-        "dnf_category",]
-
-    target_cols = [c for c in df.columns if c.startswith("target_")]
-    drop_from_features = set(leak_cols + target_cols)
-
-    feature_cols = [c for c in df.columns if c not in drop_from_features]
-
+    print("Nb features :", len(feature_columns))
+    print("'target_points' dans features ?",
+          "target_points" in feature_columns)
+    
     # Split by years
     train_df = df[df["year"].isin(train_years)]
     val_df = df[df["year"].isin(val_years)]
     test_df = df[df["year"].isin(test_years)]
 
-    X_train, y_train = train_df[feature_cols], train_df[target_col]
-    X_val, y_val = val_df[feature_cols], val_df[target_col]
-    X_test, y_test = test_df[feature_cols], test_df[target_col]
+    X_train, y_train = train_df[feature_columns], train_df[target_col]
+    X_val, y_val = val_df[feature_columns], val_df[target_col]
+    X_test, y_test = test_df[feature_columns], test_df[target_col]
 
     return X_train, y_train, X_val, y_val, X_test, y_test
 
@@ -58,15 +48,14 @@ def train_xgb_baseline(
     y_train,
     X_val,
     y_val,
-    random_state: int = 42,
-) -> XGBClassifier:
+    random_state: int = 42,) -> XGBClassifier:
     """
     Train a simple XGBoost baseline model and print validation metrics.
     """
     
     model = XGBClassifier(
-        max_depth = 6,
-        n_estimators = 400,
+        max_depth = 3,
+        n_estimators = 150,
         learning_rate = 0.05,
         subsample = 0.8,
         colsample_bytree = 0.8,
@@ -76,19 +65,15 @@ def train_xgb_baseline(
         n_jobs =-1,)
 
     model.fit(
-        X_train,
-        y_train,
-        eval_set = [(X_val, y_val)],
-        verbose = False,
-        early_stopping_rounds = 30,)
+    X_train,
+    y_train,
+    eval_set = [(X_val, y_val)],
+    verbose = False,)
     
     # simple validation metrics
     y_val_pred_proba = model.predict_proba(X_val)[:, 1]
     y_val_pred = (y_val_pred_proba >= 0.5).astype(int)
-
-    print("Validation accuracy:", accuracy_score(y_val, y_val_pred))
-    print("Validation ROC-AUC:", roc_auc_score(y_val, y_val_pred_proba))
-
+    
     return model
 
 def build_and_train_model(target_col: str = "target_top10") -> XGBClassifier:
