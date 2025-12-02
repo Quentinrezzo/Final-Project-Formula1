@@ -1,6 +1,6 @@
 """
 This file contains functions that improve the cleaned dataset with additional information.
-The goal is to keep 'data_loader.py' focused on filtering cleaning (selecting years 2020-2025), while this file is used to add useful extra information that can later be used for feature engineering and modeling.
+The goal is to keep 'data_loader.py' focused on filtering cleaning (selecting years 2015-2025), while this file is used to add useful extra information that can later be used for feature engineering and modeling.
 """
 
 from pathlib import Path
@@ -80,12 +80,14 @@ def fill_circuit_extra_info():
     # Dictionary containing extra information mapped by CircuitId
     circuits_info = {
         1: {"length_km": 5.278, "is_night_race": False, "track_type": "balanced"},
+        2: {"length_km": 5.543, "is_night_race": False, "track_type": "balanced"},
         3: {"length_km": 5.412, "is_night_race": True, "track_type": "balanced"},
         4: {"length_km": 4.657, "is_night_race": False, "track_type": "balanced"},
         5: {"length_km": 5.338, "is_night_race": False, "track_type": "balanced"},
         6: {"length_km": 3.337, "is_night_race": False, "track_type": "technical"},
         7: {"length_km": 4.361, "is_night_race": False, "track_type": "balanced"},
         9: {"length_km": 5.891, "is_night_race": False, "track_type": "high_speed"},
+        10: {"length_km": 4.574, "is_night_race": False, "track_type": "balanced"},
         11: {"length_km": 4.381, "is_night_race": False, "track_type": "technical"},
         13: {"length_km": 7.004, "is_night_race": False, "track_type": "high_speed"},
         14: {"length_km": 5.793, "is_night_race": False, "track_type": "high_speed"},
@@ -100,6 +102,7 @@ def fill_circuit_extra_info():
         32: {"length_km": 4.304, "is_night_race": False, "track_type": "balanced"},
         34: {"length_km": 5.842, "is_night_race": False, "track_type": "balanced"},
         39: {"length_km": 4.259, "is_night_race": False, "track_type": "balanced"},
+        68: {"length_km": 5.125, "is_night_race": False, "track_type": "balanced"},
         69: {"length_km": 5.513, "is_night_race": False, "track_type": "balanced"},
         70: {"length_km": 4.326, "is_night_race": False, "track_type": "high_speed"},
         71: {"length_km": 5.848, "is_night_race": False, "track_type": "balanced"},

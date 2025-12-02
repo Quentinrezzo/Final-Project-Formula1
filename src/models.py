@@ -25,11 +25,8 @@ def train_val_test_split_by_year(
     """
     
     target_columns = [c for c in df.columns if c.startswith("target_")]
-    feature_columns = [c for c in df.columns if c not in target_columns]
-
-    print("Nb features :", len(feature_columns))
-    print("'target_points' dans features ?",
-          "target_points" in feature_columns)
+    id_columns = ["raceId", "driverId", "constructorId", "circuitId"]
+    feature_columns = [c for c in df.columns if c not in target_columns + id_columns]
     
     # Split by years
     train_df = df[df["year"].isin(train_years)]
@@ -57,12 +54,9 @@ def train_xgb_baseline(
         max_depth = 3,
         n_estimators = 150,
         learning_rate = 0.05,
-        subsample = 0.8,
-        colsample_bytree = 0.8,
         objective = "binary:logistic",
         eval_metric = "logloss",
-        random_state = random_state,
-        n_jobs =-1,)
+        random_state = random_state,)
 
     model.fit(
     X_train,
@@ -101,15 +95,6 @@ def build_and_train_model(target_col: str = "target_top10") -> XGBClassifier:
     print("Test ROC-AUC:", roc_auc_score(y_test, y_test_proba))
 
     return model
-    
 
 
 
-
-
-
-
-
-    
-    
-    

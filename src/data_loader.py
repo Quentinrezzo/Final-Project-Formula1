@@ -1,7 +1,6 @@
 """
 File allowing you to filter the 'Formula 1 Race Data' dataset
-to include only the most recent seasons (2020–2025), keeping
-the data consistent with the modern F1 regulations and structure.
+to include the seasons (2015–2025), while still allowing the progressive performance statistics to capture drivers' experience.
 
 When a CSV file is filtered, it will go directly into a new folder called 'processed'
 located under the main 'data' directory. This allows the original
@@ -38,10 +37,12 @@ def create_processed_folder() -> Path:
     return processed_direction
 
 
-def filter_races_by_year(start_year: int = 2020, end_year: int = 2025) -> Path:
+def filter_races_by_year(start_year: int = 2015, end_year: int = 2025) -> Path:
     """
     Filter the 'races.csv' file to include only races whose 'year'
-    is between start_year and end_year (inclusive).
+    is between start_year and end_year (inclusive), keeping the complete 
+    history of current drivers.
+    
     The filtered version is saved into the data/processed/ folder as: races_cleaned.csv.
 
     Args:
@@ -159,7 +160,7 @@ def filter_table_by_race_ids(table_name: str, race_ids: set[int], raw_filename: 
 def filter_circuits_by_races() -> Path:
     """
     Filter the 'circuits.csv' file to include only the circuits used in the
-    filtered 'races_cleaned.csv' (2020–2025).
+    filtered 'races_cleaned.csv' (2015–2025).
     The filtered version is saved to data/processed/ as: circuits_cleaned.csv.
 
     Returns:

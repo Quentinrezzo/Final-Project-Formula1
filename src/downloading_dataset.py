@@ -38,6 +38,7 @@ def download_dataset(destination: str = "data/raw") -> Path:
         print(f"✅ Formula 1 Race Dataset download and available at: {destination_path}")
     except Exception as e:
         print("⚠️ Kaggle download failed:", e)
+        return None
 
     return destination_path
 

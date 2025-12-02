@@ -2,7 +2,7 @@
 This module builds all time-aware (progressive) feature tables used in the
 Formula 1 project.
 
-Starting from the cleaned and enriched CSV files (2020–2025 seasons), it
+Starting from the cleaned and enriched CSV files (2015–2025 seasons), it
 computes progressive performance metrics for:
 
 - drivers
@@ -1032,7 +1032,6 @@ def build_driver_circuits_progressive_performance() -> Path:
         podiums = ("podium", "sum"),
         top5_finishes = ("top5", "sum"),
         top10_finishes = ("top10", "sum"),
-        best_finish_position = ("position", "min"),
         points_scored = ("points", "sum"),
         mech_dnf_count = ("mech_dnf", "sum"),
         crash_dnf_count = ("crash_dnf", "sum"),
@@ -1115,7 +1114,6 @@ def build_driver_circuits_progressive_performance() -> Path:
         "podiums",
         "top5_finishes",
         "top10_finishes",
-        "best_finish_position",
         "points_scored",
         "points_per_race",
         "avg_finish_position",
@@ -1148,19 +1146,6 @@ def build_driver_circuits_progressive_performance() -> Path:
 
     return output_file
 
-"""
-    # Limit to recent seasons to reduce kernel crashes
-    base_df = base_df[(base_df["year"] >= year_min) & (base_df["year"] <= year_max)].copy()
-
-    for perf_df in [drivers_perf_df, constructors_perf_df,
-                    sprint_perf_df, quali_perf_df, circuit_perf_df, races_df]:
-        if "year" in perf_df.columns:
-            mask = (perf_df["year"] >= year_min) & (perf_df["year"] <= year_max)
-            perf_df.drop(perf_df.index[~mask], inplace = True)
-    
-    # Start from base race-entry table
-    df = base_df.copy()
-"""
 
 def build_model_dataset() -> Path:
     """
@@ -1410,7 +1395,6 @@ def build_model_dataset() -> Path:
         "total_points",
         "points_per_race",
         "points_scored",
-        "best_finish_position",
         "consistency_index",
         "performance_score",]
     
@@ -1465,9 +1449,19 @@ def build_model_dataset() -> Path:
         "constructor_nationality",
         "circuit_name",
         "circuit_location",
-        "circuit_country",]
+        "circuit_country",
+        "quali_sessions_rate",
+        "quali_q3_rate",
+        "circ_other_dnf_count",
+        "circ_other_dnf_rate"]
     
     df = df.drop(columns = [c for c in (leakage_cols + low_value_cols) if c in df.columns])
+
+    # Keep only the years for the model
+    if "year" in df.columns:
+        df = df[(df["year"] >= 2020) & (df["year"] <= 2025)].copy()
+    else:
+        raise KeyError("Column 'year' missing before model dataset filtering.")
     
     # Save new table to 'processed' folder
     df.to_csv(output_file, index = False)
