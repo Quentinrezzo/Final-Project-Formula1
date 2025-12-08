@@ -19,7 +19,7 @@ processed_direction = project_root / "data" / "processed"
 
 def create_processed_folder() -> Path:
     """
-    Create the processed/ folder inside the project's data/ directory
+    Create the processed/ folder inside the project's data/ directory.
     
     Returns:
         Path: path to the processed/ directory.

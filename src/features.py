@@ -12,13 +12,15 @@ computes progressive performance metrics for:
 - driver–circuit combinations
 
 For each entity, the progressive features at a given season or race use
-only the historical data available up to that point, which prevents data
-leakage when training machine-learning models.
+only historical data available up to that point (N-1 logic). This ensures 
+no data leakage when training machine-learning models to predict an
+entire future season (e.g., forecasting 2026 using results up to 2025).
 
-These same progressive tables can also be used for exploratory data
-analysis (EDA) and visualisation by filtering on a specific year (for
-example, keeping only rows where year == 2025) to obtain a snapshot of
-current performance.
+For exploratory data analysis (EDA) and visualisation, the driver_race_base.csv
+table can provide a snapshot of drivers' performance. For example: filtering 
+rows where year == 2025 gives the current performance. Note that in this table, 
+columns prefixed with 'sprint_' correspond to sprint race outcomes, while the other 
+columns describe the results of the main Grand Prix races.
 """
 
 from pathlib import Path
@@ -38,6 +40,7 @@ def build_driver_race_base() -> Path:
     - drivers_cleaned.csv
     - constructors_cleaned.csv
     - circuits_cleaned.csv
+    - sprint_results_cleaned.csv
 
     The merge table is saved as: data/processed/driver_race_base.csv
 
@@ -51,6 +54,7 @@ def build_driver_race_base() -> Path:
     drivers_file = processed_direction / "drivers_cleaned.csv"
     constructors_file = processed_direction / "constructors_cleaned.csv"
     circuits_file = processed_direction / "circuits_cleaned.csv"
+    sprint_file = processed_direction / "sprint_results_cleaned.csv"
     output_file = processed_direction / "driver_race_base.csv"
 
     # Load data
@@ -60,6 +64,7 @@ def build_driver_race_base() -> Path:
         drivers_df = pd.read_csv(drivers_file)
         constructors_df = pd.read_csv(constructors_file)
         circuits_df = pd.read_csv(circuits_file)
+        sprint_df = pd.read_csv(sprint_file) 
     except Exception as e:
         print(f"⚠️ Error while reading one of the cleaned files: {e}")
         return None
@@ -71,7 +76,6 @@ def build_driver_race_base() -> Path:
         "raceId",
         "driverId",
         "constructorId",
-        "grid",
         "position",
         "points",
         "laps",
@@ -129,16 +133,53 @@ def build_driver_race_base() -> Path:
     circuits_small = circuits_df[circuits_columns].copy()
     circuits_small = circuits_small.rename(columns = {"name": "circuit_name"})
 
+    # Sprint results: only useful columns
+    sprint_columns = ["raceId", "driverId", "position", "points"]
+    sprint_small = sprint_df[sprint_columns].copy()
+    sprint_small = sprint_small.rename(columns = {"position": "sprint_position", "points": "sprint_points",})
+
     # Merge
     base_df = results_small.merge(races_small, on = "raceId", how = "left", validate = "many_to_one",)
     base_df = base_df.merge(drivers_small, on = "driverId", how = "left", validate = "many_to_one",)
     base_df = base_df.merge(constructors_small, on = "constructorId", how = "left", validate = "many_to_one",)
     base_df = base_df.merge(circuits_small, on = "circuitId", how = "left", validate = "many_to_one",)
+    base_df = base_df.merge(sprint_small, on = ["raceId", "driverId"], how = "left", validate = "one_to_one")
 
     # Sort
-    sort_columns = [col for col in ["year", "round", "raceId", "driverId"] if col in base_df.columns]
-    if sort_columns:
-        base_df = base_df.sort_values(sort_columns).reset_index(drop = True)
+    ordered_columns = [
+        "raceId",
+        "driverId",
+        "constructorId",
+        "circuitId",
+        "statusId",
+        "year",
+        "round",
+        "date",
+        "driverRef",
+        "code",
+        "forename",
+        "surname",
+        "driver_nationality",
+        "constructorRef",
+        "constructor_name",
+        "constructor_nationality",
+        "circuit_name",
+        "race_name",
+        "location",
+        "country",
+        "alt",
+        "length_km",
+        "race_distance_km",
+        "is_night_race",
+        "track_type",
+        "laps",
+        "milliseconds",
+        "position",
+        "points",
+        "sprint_position",
+        "sprint_points",]
+    
+    base_df = base_df[ordered_columns]
 
     # Save new table to 'processed' folder
     base_df.to_csv(output_file, index = False)
@@ -146,37 +187,7 @@ def build_driver_race_base() -> Path:
     # Check
     try:
         check_df = pd.read_csv(output_file)
-        expected_columns = [
-            "raceId",
-            "driverId",
-            "constructorId",
-            "grid",
-            "position",
-            "points",
-            "laps",
-            "milliseconds",
-            "statusId",
-            "year",
-            "round",
-            "race_name",
-            "race_distance_km",
-            "date",
-            "circuitId",
-            "driverRef",
-            "code",
-            "forename",
-            "surname",
-            "driver_nationality",
-            "constructorRef",
-            "constructor_name",
-            "constructor_nationality",
-            "circuit_name",
-            "location",
-            "country",
-            "alt",
-            "length_km",
-            "is_night_race",
-            "track_type",]
+        expected_columns = ordered_columns
 
         all_columns_present = all(col in check_df.columns for col in expected_columns)
         
@@ -208,7 +219,8 @@ def build_driver_progressive_performance() -> Path:
         finish_rate, dnf_rate, mech/crash/other_dnf_rate, reliability_rate,
         points_per_race.
 
-    The progressive performance table is saved as: data/processed/drivers_progressive_performance.csv
+    The progressive performance table is saved
+    as:data/processed/drivers_progressive_performance.csv
 
     Returns:
         Path: Path to the saved drivers_progressive_performance.csv file.
@@ -399,7 +411,8 @@ def build_constructor_progressive_performance() -> Path:
         finish_rate, dnf_rate, mech/crash/other_dnf_rate, reliability_rate,
         points_per_race.
         
-    The progressive performance table is saved as: data/processed/constructors_progressive_performance.csv
+    The progressive performance table is saved 
+    as: data/processed/constructors_progressive_performance.csv
 
     Returns:
         Path: Path to the saved constructors_progressive_performance.csv file.
@@ -1149,12 +1162,14 @@ def build_driver_circuits_progressive_performance() -> Path:
 
 def build_model_dataset() -> Path:
     """
-    Create the final modelling dataset at race-entry level.
+    Create the final modelling dataset at race-entry level. It keeps only the
+    last 5 seasons from driver_race_base.csv. So the modelling dataset always focuses 
+    on the most recent performance.
 
     It creates one row per driver/constructor in each race, with:
-    - base race information (grid, position, points, status, etc.),
+    - base race information
     - enriched status category (mechanical / crash / other / no_dnf),
-    - race and circuit data (year, round, distance, country, etc.),
+    - race and circuit data (year, round, distance, etc.),
     - driver & constructor identity columns,
     - global progressive driver performance features,
     - global progressive constructor performance features,
@@ -1200,6 +1215,7 @@ def build_model_dataset() -> Path:
     
     # We remove existing race/circuit columns to avoid duplicates later on
     drop_base_cols = [
+        "grid",
         "year",
         "round",
         "circuitId",
@@ -1306,12 +1322,20 @@ def build_model_dataset() -> Path:
     df = df.merge(driver_circuit_features, on = ["driverId", "circuitId", "year"], how = "left")
 
     # Numerical columns
-    df[["position", "grid", "points"]] = df[["position", "grid", "points"]].apply(pd.to_numeric, errors = "coerce")
+    num_cols = [c for c in ["position", "points", "sprint_position", "sprint_points"] if c in df.columns]
+    if num_cols:
+        df[num_cols] = df[num_cols].apply(pd.to_numeric, errors = "coerce")
 
+    # Create sprint flag before dropping sprint results
+    df["has_sprint"] = df["sprint_position"].notna().astype(int)
+    
     # Create target columns
-    df["target_win"] = (df["position"] == 1).astype(int)
-    df["target_top3"] = df["position"].between(1, 3, inclusive = "both").astype(int)
     df["target_top10"] = df["position"].between(1, 10, inclusive = "both").astype(int)
+    df["target_top3"] = df["position"].between(1, 3, inclusive = "both").astype(int)
+    df["target_win"] = (df["position"] == 1).astype(int)
+    df["target_top8_sprint"] = df["sprint_position"].between(1, 8, inclusive = "both").fillna(False).astype(int)
+    df["target_top3_sprint"] = df["sprint_position"].between(1, 3, inclusive = "both").fillna(False).astype(int)
+    df["target_win_sprint"] = (df["sprint_position"] == 1).fillna(False).astype(int)
     
     # Resolve duplicate columns with _x / _y siffixes
     duplicate_sets = [
@@ -1349,7 +1373,6 @@ def build_model_dataset() -> Path:
         "driverId",
         "constructorId",
         "circuitId",
-        "grid",
         "year",
         "round",
         "race_distance_km",
@@ -1416,11 +1439,13 @@ def build_model_dataset() -> Path:
     other_cols = [c for c in df.columns if c not in already_used]
         
     df = df[ordered_first + perf_cols + other_cols]
-
+    
     # Remove leakage and low value columns
     leakage_cols = [
         "position",
         "points",
+        "sprint_position",
+        "sprint_points",
         "laps",
         "milliseconds",
         "statusId",
@@ -1453,15 +1478,21 @@ def build_model_dataset() -> Path:
         "quali_sessions_rate",
         "quali_q3_rate",
         "circ_other_dnf_count",
-        "circ_other_dnf_rate"]
+        "circ_other_dnf_rate",
+        "length_km",]
     
     df = df.drop(columns = [c for c in (leakage_cols + low_value_cols) if c in df.columns])
 
-    # Keep only the years for the model
+    # Keep only the last 5 seasons for the model
+    n_years = 5
     if "year" in df.columns:
-        df = df[(df["year"] >= 2020) & (df["year"] <= 2025)].copy()
+        max_year = int(df["year"].max())
+        min_year = max_year - n_years + 1
+        df = df[(df["year"] >= min_year) & (df["year"] <= max_year)].copy()
+        print(f"Keeping seasons from {min_year} to {max_year}")
     else:
         raise KeyError("Column 'year' missing before model dataset filtering.")
+
     
     # Save new table to 'processed' folder
     df.to_csv(output_file, index = False)
@@ -1476,5 +1507,49 @@ def build_model_dataset() -> Path:
     except Exception as e:
         print(f"⚠️ Error while checking model_dataset file: {e}")
         return None
+
+    return output_file
+
+
+def build_future_model_dataset(season_year: int = 2025) -> Path:
+    """
+    Build a feature modelling dataset for a given season.
+
+    This function reuses model_dataset.csv and:
+    - filters the rows for the requested season
+    - drops all target_* columns
+
+    The table is saved as: data/processed/model_dataset_predictions_{season_year}.csv.
+
+    Args:
+        season_year (int): season we want to predict.
+
+    Returns:
+        Path: Path to the saved model_dataset_predictions_{season_year}.csv.
+    """
+
+    # Define file paths
+    model_file = processed_direction / "model_dataset.csv"
+    output_file = processed_direction / f"model_dataset_predictions_{season_year}.csv"
+
+    # Load the dataset
+    try:
+        df = pd.read_csv(model_file)
+    except Exception as e:
+        print(f"⚠️ Error while reading {model_file}: {e}")
+        return None
+
+    # Keep only the requested season
+    season_df = df[df["year"] == season_year].copy()
+
+    # Drop all target columns
+    target_columns = [c for c in season_df.columns if c.startswith("target_")]
+    season_df = season_df.drop(columns = target_columns)
+
+    # Save new table to 'processed' folder
+    season_df.to_csv(output_file, index = False)
+
+    print(f"✅ model_dataset_predictions_{season_year}.csv successfully created")
+    print(f"📂 Saved to: {output_file.name}")
 
     return output_file
