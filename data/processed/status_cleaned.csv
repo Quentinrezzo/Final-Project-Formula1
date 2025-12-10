@@ -1,0 +1,66 @@
+statusId,status,dnf_category,is_mechanical,is_crash,is_other_dnf,is_no_dnf
+1,Finished,no_dnf,False,False,False,True
+2,Disqualified,other_dnf,False,False,True,False
+3,Accident,crash,False,True,False,False
+4,Collision,crash,False,True,False,False
+5,Engine,mechanical,True,False,False,False
+6,Gearbox,mechanical,True,False,False,False
+7,Transmission,mechanical,True,False,False,False
+9,Hydraulics,mechanical,True,False,False,False
+10,Electrical,mechanical,True,False,False,False
+11,+1 Lap,no_dnf,False,False,False,True
+12,+2 Laps,no_dnf,False,False,False,True
+13,+3 Laps,no_dnf,False,False,False,True
+14,+4 Laps,no_dnf,False,False,False,True
+15,+5 Laps,no_dnf,False,False,False,True
+16,+6 Laps,no_dnf,False,False,False,True
+17,+7 Laps,no_dnf,False,False,False,True
+20,Spun off,crash,False,True,False,False
+21,Radiator,mechanical,True,False,False,False
+22,Suspension,mechanical,True,False,False,False
+23,Brakes,mechanical,True,False,False,False
+24,Differential,mechanical,True,False,False,False
+25,Overheating,mechanical,True,False,False,False
+26,Mechanical,mechanical,True,False,False,False
+27,Tyre,no_dnf,False,False,False,True
+29,Puncture,mechanical,True,False,False,False
+30,Driveshaft,mechanical,True,False,False,False
+31,Retired,other_dnf,False,False,True,False
+32,Fuel pressure,mechanical,True,False,False,False
+33,Front wing,mechanical,True,False,False,False
+34,Water pressure,mechanical,True,False,False,False
+36,Wheel,mechanical,True,False,False,False
+37,Throttle,mechanical,True,False,False,False
+38,Steering,mechanical,True,False,False,False
+39,Technical,mechanical,True,False,False,False
+40,Electronics,mechanical,True,False,False,False
+43,Exhaust,mechanical,True,False,False,False
+44,Oil leak,mechanical,True,False,False,False
+47,Water leak,mechanical,True,False,False,False
+48,Fuel pump,mechanical,True,False,False,False
+51,Oil pressure,mechanical,True,False,False,False
+54,Withdrew,other_dnf,False,False,True,False
+60,Out of fuel,mechanical,True,False,False,False
+61,Wheel nut,mechanical,True,False,False,False
+64,Handling,mechanical,True,False,False,False
+65,Rear wing,mechanical,True,False,False,False
+69,Fuel system,mechanical,True,False,False,False
+75,Power loss,mechanical,True,False,False,False
+76,Vibrations,mechanical,True,False,False,False
+84,Battery,no_dnf,False,False,False,True
+92,Underweight,other_dnf,False,False,True,False
+95,Fuel leak,mechanical,True,False,False,False
+96,Excluded,no_dnf,False,False,False,True
+101,Turbo,mechanical,True,False,False,False
+103,Water pump,mechanical,True,False,False,False
+105,Spark plugs,no_dnf,False,False,False,True
+130,Collision damage,crash,False,True,False,False
+131,Power Unit,mechanical,True,False,False,False
+132,ERS,no_dnf,False,False,False,True
+135,Brake duct,no_dnf,False,False,False,True
+136,Seat,no_dnf,False,False,False,True
+137,Damage,crash,False,True,False,False
+138,Debris,other_dnf,False,False,True,False
+139,Illness,other_dnf,False,False,True,False
+140,Undertray,mechanical,True,False,False,False
+141,Cooling system,mechanical,True,False,False,False

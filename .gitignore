@@ -12,7 +12,6 @@ __pycache__/
 *.ipynb
 
 # --- Data ---
-data/processed/
 data/*.parquet
 data/*.zip
 data/*.gz
