@@ -319,7 +319,7 @@ def main() -> None:
 
     # 11.5 Visualize
     print("\n Visualize feature importance across all models")
-    plot_combined_feature_importances()
+    plot_combined_feature_importances(top_n = 15)
     print("✅ Combined feature importance plot generated and saved successfully")
     
     print("\n All visualization plots successfully generated and saved")

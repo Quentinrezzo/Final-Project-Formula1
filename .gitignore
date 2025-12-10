@@ -36,7 +36,3 @@ Thumbs.db
 .vscode/
 .idea/
 *.swp
-
-# --- Results / Figures ---
-results/
-figures/

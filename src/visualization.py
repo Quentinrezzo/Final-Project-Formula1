@@ -305,24 +305,19 @@ def plot_predictions_heatmaps_2026():
     gp_df = df[df["race_type"] == "gp"].copy()
     sprint_df = df[df["race_type"] == "sprint"].copy()
 
-    # Keep only drivers with at least one Top10/Top8
-    gp_valid = gp_df.groupby("driver")["pred_target_top10"].sum()
-    sprint_valid = sprint_df.groupby("driver")["pred_target_top8_sprint"].sum()
-    gp_valid = gp_valid[gp_valid > 0].index
-    sprint_valid = sprint_valid[sprint_valid > 0].index
-    common_drivers = gp_valid.intersection(sprint_valid)
-
+    # Keep all drivers who appear at least once
+    common_drivers = sorted(set(gp_df["driver"].dropna().unique()) | set(sprint_df["driver"].dropna().unique()))
     gp_df = gp_df[gp_df["driver"].isin(common_drivers)]
     sprint_df = sprint_df[sprint_df["driver"].isin(common_drivers)]
-
+    
     # Pivot tables
     gp_pivot = gp_df.pivot_table(index = "driver", columns = "circuit", values = "score", aggfunc = "max").fillna(0)
     sprint_pivot = sprint_df.pivot_table(index = "driver", columns = "circuit", values = "score", aggfunc = "max").fillna(0)
-
-    # Sort drivers by GP performance
-    driver_order = gp_pivot.sum(axis = 1).sort_values(ascending = False).index
-    gp_pivot = gp_pivot.loc[driver_order]
-    sprint_pivot = sprint_pivot.loc[driver_order]
+    
+    # Ensure both tables have same driver order
+    driver_order = sorted(common_drivers)
+    gp_pivot = gp_pivot.reindex(driver_order)
+    sprint_pivot = sprint_pivot.reindex(driver_order)
 
     # Define colors
     blues = ["lightblue", "royalblue", "midnightblue"]
@@ -334,20 +329,20 @@ def plot_predictions_heatmaps_2026():
     fig, axes = plt.subplots(1, 2, figsize = (14, 6), sharey = True)
 
     # GP Heatmap
-    im1 = axes[0].imshow(gp_pivot.values, cmap = gp_cmap, aspect = "auto", vmin = 0, vmax = 3, extent =[0, len(gp_pivot.columns), len(gp_pivot.index), 0])
+    im1 = axes[0].imshow(gp_pivot.values, cmap = gp_cmap, aspect = "auto", vmin = 0, vmax = 3)
     axes[0].set_title("Grand Prix Predictions (2026)", fontsize = 12)
     axes[0].set_xticks(np.arange(len(gp_pivot.columns)) + 0.5)
     axes[0].set_xticklabels(gp_pivot.columns, rotation = 75, ha = "right", fontsize = 8)
-    axes[0].set_yticks(np.arange(len(gp_pivot.index)) + 0.5)
-    axes[0].set_yticklabels(gp_pivot.index.tolist(), fontsize = 9)
+    axes[0].set_yticks(np.arange(len(gp_pivot.index)))
+    axes[0].set_yticklabels(gp_pivot.index, fontsize = 9)
     axes[0].set_ylabel("Driver", fontsize = 10)
-    axes[0].tick_params(axis = "y", which = "both", length = 0)
 
     # Sprint Heatmap
-    im2 = axes[1].imshow(sprint_pivot.values, cmap = sprint_cmap, aspect = "auto", vmin = 0, vmax = 3, extent = [0, len(sprint_pivot.columns), len(sprint_pivot.index), 0])
+    im2 = axes[1].imshow(sprint_pivot.values, cmap = sprint_cmap, aspect = "auto", vmin = 0, vmax = 3)
     axes[1].set_title("Sprint Race Predictions (2026)", fontsize = 12)
     axes[1].set_xticks(np.arange(len(sprint_pivot.columns)) + 0.5)
     axes[1].set_xticklabels(sprint_pivot.columns, rotation = 75, ha = "right", fontsize = 8)
+    axes[1].set_yticks(np.arange(len(sprint_pivot.index)))
     axes[1].set_yticklabels([])
 
     # Add legends
