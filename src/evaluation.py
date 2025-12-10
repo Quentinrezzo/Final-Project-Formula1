@@ -1,19 +1,22 @@
 """
-Evaluation tools for Formula 1 race outcome models.
+Evaluation and prediction tools for Formula 1 race outcome models.
 
 This file reuses the training functions in models.py to:
-- train a Random Forest baseline model
+- train and evaluate a Random Forest baseline model
 - evaluate it on the test set and save metrics to the results/ folder
+- compare the model predictions for a given season with the actual outcomes
 - use the trained model to predict a future season (e.g., 2026)
 """
 
 from pathlib import Path
 import pandas as pd
-from sklearn.metrics import roc_auc_score, accuracy_score
+import numpy as np
+from sklearn.metrics import roc_auc_score, f1_score, accuracy_score
 
 # Import paths and training functions
 from .data_loader import processed_direction
 from .models import train_val_test_split_by_year, train_rf_baseline
+from .features import build_future_model_dataset
 from .downloading_dataset import project_root
 
 # Path to the results/ directory
@@ -162,29 +165,34 @@ def evaluate_all_targets() -> pd.DataFrame:
     return metrics_df
 
 
-def predict_future_season(
-    season_year: int = 2025,
-    targets = ("target_top10", "target_top3", "target_win"),
-    train_years = (2020, 2021, 2022, 2023),
-    val_years = (2024,),
-    test_years = (2025,),) -> pd.DataFrame:
+def predict_season_2025() -> pd.DataFrame:
     """
-    Train an XGBoost model on past seasons and generate predictions
-    for a future season.
+    Train the Random Forest model on data up to 2024 and generate predictions for 2025.
 
-    The predictions are saved as: results/predictions_{season_year}.csv.
-    
+    This version is similar to predict_future_season(), but specifically designed
+    to compare the model’s predicted 2025 season with the actual 2025 results.
+
+    The predictions are saved as: results/predictions_2025.csv
+
     Returns:
-        pd.DataFrame: future season table
+        pd.DataFrame: prediction table for the 2025 season.
     """
 
-    # Define file paths (historical data with targets and future season features 
-    # without target)
+    # Define targets
+    targets = [
+        "target_top10",
+        "target_top3",
+        "target_win",
+        "target_top8_sprint",
+        "target_top3_sprint",
+        "target_win_sprint"]
+
+    # Define file paths
     hist_file = processed_direction / "model_dataset.csv"
-    future_file = processed_direction / f"model_dataset_predictions_{season_year}.csv"
-    output_file = results_direction / f"predictions_{season_year}.csv"
-    
-    # Load data
+    future_file = build_future_model_dataset(next_year = 2025)
+    output_file = results_direction / "predictions_2025.csv"
+
+    # Load datasets
     try:
         hist_df = pd.read_csv(hist_file)
         future_df = pd.read_csv(future_file)
@@ -192,73 +200,110 @@ def predict_future_season(
         print(f"⚠️ Error while reading {hist_file} or {future_file}: {e}")
         return None
 
-    # Loop over targets
-    for target_col in targets:
-        print(f"\n Predicting {target_col} for season {season_year}")
+    # Ensure required columns
+    for col in ["year", "has_sprint"]:
+        if col not in hist_df.columns:
+            raise KeyError(f"Missing essential column: {col}")
 
-        # Split by year (no leakage)
-        X_train, y_train, X_val, y_val, X_test, _ = train_val_test_split_by_year(
-            hist_df,
+    results = []
+
+    # Predict per target
+    for target_col in targets:
+        print(f"\n Predicting for target {target_col}")
+
+        is_sprint = "sprint" in target_col.lower()
+        df_use = hist_df[hist_df["has_sprint"] == 1] if is_sprint else hist_df.copy()
+
+        # Train up to 2024 only
+        df_use = df_use[df_use["year"] <= 2024]
+        years = sorted(df_use["year"].unique())
+        if len(years) < 3:
+            print(f"⚠️ Not enough seasons for {target_col}. Found: {years}")
+            continue
+
+        val_year = years[-1]   # 2024
+        train_years = tuple(y for y in years if y < val_year)
+
+        X_train, y_train, X_val, y_val, _, _ = train_val_test_split_by_year(
+            df_use,
             target_col = target_col,
             train_years = train_years,
-            val_years = val_years,
-            test_years = test_years,)
+            val_years = (val_year,),
+            test_years = ())
 
-        # Train XGBoost baseline model
-        model = train_xgb_baseline(X_train, y_train, X_val, y_val)
+        model = train_rf_baseline(X_train, y_train, X_val, y_val)
 
-        # Use exactly the same feature columns on the future season
-        feature_columns = list(X_train.columns)
-        X_future = future_df[feature_columns].copy()
-        
-        for col in feature_columns:
-            X_future[col] = X_future[col].astype(X_train[col].dtype)
+        # Prepare 2025 data
+        if "has_sprint" in future_df.columns:
+            future_df["race_type"] = "gp"
+            sprint_weekends = future_df.loc[future_df["has_sprint"] == 1, ["raceId", "driverId"]]
+            sprint_rows = future_df.merge(sprint_weekends, on = ["raceId", "driverId"], how = "inner")
+            sprint_rows["race_type"] = "sprint"
+            future_df = pd.concat([future_df, sprint_rows], ignore_index = True)
+            future_df = future_df.drop_duplicates(subset = ["raceId", "driverId", "race_type"], keep = "first").reset_index(drop = True)
 
-        # Predictions
-        proba = model.predict_proba(X_future)[:, 1]
-        
-        # Clear columns with suffix
-        if target_col.startswith("target_"):
-            suffix = target_col.replace("target_", "")
+        # Filter race type
+        future_use = future_df.copy()
+        if is_sprint:
+            future_use = future_use[future_use["race_type"] == "sprint"]
         else:
-            suffix = target_col
+            future_use = future_use[future_use["race_type"] == "gp"]
 
-        pred_col = f"pred_{suffix}"
-        proba_col = f"proba_{suffix}"
+        if future_use.empty:
+            print(f"⚠️ Skipping {target_col}: no data available for this race type")
+            continue
 
-        # Save the probabilities and initialize the prediction column to 0
-        future_df[proba_col] = proba
-        future_df[pred_col] = 0
-        
-        # rank by raceId
-        for race_id, idx in future_df.groupby("raceId").groups.items():
-            
-            # Top10: mark the 10 best probabilities
-            if suffix == "top10":
-                top_idx = future_df.loc[idx, proba_col].nlargest(10).index
-                future_df.loc[top_idx, pred_col] = 1
-            
-            # Top3: mark the 3 best probabilities
-            elif suffix == "top3":
-                top_idx = future_df.loc[idx, proba_col].nlargest(3).index
-                future_df.loc[top_idx, pred_col] = 1
-            
-            # Win: mark only the top probability
-            elif suffix == "win":
-                winner_idx = future_df.loc[idx, proba_col].idxmax()
-                future_df.loc[winner_idx, pred_col] = 1
+        # Predict probabilities
+        feature_cols = [c for c in X_train.columns if c in future_use.columns]
+        proba = model.predict_proba(future_use[feature_cols])[:, 1]
 
-    # Save predictions table to results/ folder
-    future_df.to_csv(output_file, index = False)
+        preds = future_use[["raceId", "driverId", "constructorId", "circuitId", "race_type"]].copy()
+        preds[f"proba_{target_col}"] = proba
+        preds[f"pred_{target_col}"] = 0
 
-    print(f"\n✅ Predictions for season {season_year} saved to: {output_file}")
+        # Assign binary predictions
+        for race_id, idx in preds.groupby("raceId").groups.items():
+            race_probs = preds.loc[idx, f"proba_{target_col}"]
 
-    return future_df
+            if "top10" in target_col:
+                top_idx = race_probs.nlargest(10).index
+            elif "top3" in target_col and "sprint" not in target_col:
+                top_idx = race_probs.nlargest(3).index
+            elif "win" in target_col and "sprint" not in target_col:
+                top_idx = [race_probs.idxmax()]
+            elif "top8_sprint" in target_col:
+                top_idx = race_probs.nlargest(8).index
+            elif "top3_sprint" in target_col:
+                top_idx = race_probs.nlargest(3).index
+            elif "win_sprint" in target_col:
+                top_idx = [race_probs.idxmax()]
+            else:
+                continue
+            preds.loc[top_idx, f"pred_{target_col}"] = 1
+
+        results.append(preds)
+
+    # Merge all predictions
+    if not results:
+        print("⚠️ No predictions generated.")
+        return None
+
+    final_preds = results[0].copy()
+    for df_part in results[1:]:
+        final_preds = final_preds.merge(df_part, on = ["raceId", "driverId", "constructorId", "circuitId", "race_type"], how = "outer")
+
+    # Ensure IDs are integers
+    for col in ["raceId", "driverId", "constructorId", "circuitId"]:
+        final_preds[col] = pd.to_numeric(final_preds[col], errors = "coerce").fillna(0).astype(int)
+
+    # Save predictions to results/ folder
+    final_preds.to_csv(output_file, index = False)
+    print(f"\n✅ Predictions for 2025 saved to: {output_file}")
+
+    return final_preds
 
 
-def comparisons_predictions(
-    season_year: int = 2025,
-    targets = ("target_top10", "target_top3", "target_win"),) -> pd.DataFrame:
+def comparisons_predictions(season_year: int = 2025) -> pd.DataFrame:
     """
     Compare the model predictions for a given season with the actual outcomes.
 
@@ -267,7 +312,16 @@ def comparisons_predictions(
     Returns:
         pd.DataFrame: table with accuracy per target for the given season.
     """
-
+    
+    # Define targets
+    targets = [
+        "target_top10", 
+        "target_top3",
+        "target_win",
+        "target_top8_sprint",
+        "target_top3_sprint",
+        "target_win_sprint"]
+    
     # Define file paths
     hist_file = processed_direction / "model_dataset.csv"
     pred_file = results_direction / f"predictions_{season_year}.csv"
@@ -285,49 +339,183 @@ def comparisons_predictions(
     true_df = hist_df[hist_df["year"] == season_year].copy()
 
     # Merge on raceId and driverId
-    merged = pred_df.merge(true_df, on = ["raceId", "driverId"], how = "inner",
-                           suffixes = ("_predfile", "_truefile"),)
+    merge_cols = ["raceId", "driverId"]
+    if "race_type" in pred_df.columns and "race_type" in true_df.columns:
+        merge_cols.append("race_type")
 
-    predictions = []
-
+    df = pred_df.merge(true_df, on = merge_cols, how = "inner", suffixes = ("_pred", "_true"))
+    
+    # Compute metrics per target
+    results = []
+    
     for target_col in targets:
-        suffix = target_col.replace("target_", "")
-        pred_col = f"pred_{suffix}"
-        
-        y_true = merged[target_col]
-        y_pred = merged[pred_col]
-        
+        pred_col = f"pred_{target_col}"
+        proba_col = f"proba_{target_col}"
+
+        if target_col not in df.columns or pred_col not in df.columns:
+            continue
+
+        subset = [target_col, pred_col]
+        if proba_col in df.columns:
+            subset.append(proba_col)
+
+        clean_df = df.dropna(subset=subset)
+        if clean_df.empty:
+            continue
+
+        y_true = clean_df[target_col]
+        y_pred = clean_df[pred_col]
+        y_proba = clean_df[proba_col] if proba_col in clean_df.columns else None
+
         acc = accuracy_score(y_true, y_pred)
+        f1 = f1_score(y_true, y_pred, zero_division=0)
+        auc = roc_auc_score(y_true, y_proba) if y_proba is not None else None
         
-        predictions.append({
+        results.append({
             "season_year": season_year,
             "target": target_col,
-            "pred_column": pred_col,
-            "samples": len(merged),
-            "accuracy": acc,})
-
-    predictions_df = pd.DataFrame(predictions)
-
-    # Save comparisons table to results/ folder
-    predictions_df.to_csv(output_file, index = False)
-
-    print(f"\n✅ Comparison metrics saved to: {output_file}")
-
-    return predictions_df
-
+            "samples": len(clean_df),
+            "accuracy": acc,
+            "f1_score": f1,
+            "roc_auc": auc})
+        
+    results_df = pd.DataFrame(results)
     
+    # Save comparisons table to results/ folder
+    results_df.to_csv(output_file, index = False)
+    print(f"\n✅ Comparison metrics saved to: {output_file}")
+    
+    return results_df
 
 
+def predict_future_season(next_year: int = 2026) -> pd.DataFrame:
+    """
+    Train the Random Forest model on past seasons and generate predictions
+    for a future season.
 
+    The predictions are saved as: results/predictions_{next_year}.csv.
+    
+    Returns:
+        pd.DataFrame: future season table
+    """
+    
+    # Define targets
+    targets = [
+        "target_top10", 
+        "target_top3",
+        "target_win",
+        "target_top8_sprint",
+        "target_top3_sprint",
+        "target_win_sprint"]
 
+    # Define file paths
+    hist_file = processed_direction / "model_dataset.csv"
+    future_file = build_future_model_dataset(next_year = next_year)
+    output_file = results_direction / f"predictions_{next_year}.csv"
+    
+    # Load dataset
+    try:
+        hist_df = pd.read_csv(hist_file)
+        future_df = pd.read_csv(future_file)
+    except Exception as e:
+        print(f"⚠️ Error while reading {hist_file} or {future_file}: {e}")
+        return None
 
+    for col in ["year", "has_sprint"]:
+        if col not in hist_df.columns:
+            raise KeyError(f"Missing essential column: {col}")
 
+    results = []
+    
+    # Predict per target
+    for target_col in targets:
+        print(f"\n Predicting for target {target_col}")
 
+        is_sprint = "sprint" in target_col.lower()
+        df_use = hist_df[hist_df["has_sprint"] == 1] if is_sprint else hist_df.copy()
 
+        years = sorted(df_use["year"].unique())
+        if len(years) < 3:
+            print(f"⚠️ Not enough seasons for {target_col}. Found: {years}")
+            continue
 
+        val_year = years[-1]
+        train_years = tuple(y for y in years if y < val_year)
 
+        X_train, y_train, X_val, y_val, _, _ = train_val_test_split_by_year(
+            df_use,
+            target_col=target_col,
+            train_years=train_years,
+            val_years=(val_year,),
+            test_years=())
+        
+        model = train_rf_baseline(X_train, y_train, X_val, y_val,)
 
+        if "has_sprint" in future_df.columns:
+            future_df["race_type"] = "gp"
+            sprint_weekends = future_df.loc[future_df["has_sprint"] == 1, ["raceId", "driverId"]]
+            sprint_rows = future_df.merge(sprint_weekends, on = ["raceId", "driverId"], how = "inner")
+            sprint_rows["race_type"] = "sprint"
+            future_df = pd.concat([future_df, sprint_rows], ignore_index = True)
+            
+            future_df = future_df.drop_duplicates(subset = ["raceId", "driverId", "race_type"], keep = "first").reset_index(drop = True)
+            
+        # Filter race types
+        future_use = future_df.copy()
+        if is_sprint:
+            future_use = future_use[future_use["race_type"] == "sprint"]
+        else:
+            future_use = future_use[future_use["race_type"] == "gp"]
 
+        if future_use.empty:
+            print(f"⚠️ Skipping {target_col} — no data available for this race type")
+            continue
 
+        # Predict probabilities
+        feature_cols = [c for c in X_train.columns if c in future_use.columns]
+        proba = model.predict_proba(future_use[feature_cols])[:, 1]
 
+        preds = future_use[["raceId", "driverId", "constructorId", "circuitId", "race_type"]].copy()
+        preds[f"proba_{target_col}"] = proba
+        preds[f"pred_{target_col}"] = 0
 
+        # Assign binary predictions
+        for race_id, idx in preds.groupby("raceId").groups.items():
+            race_probs = preds.loc[idx, f"proba_{target_col}"]
+            
+            if "top10" in target_col:
+                top_idx = race_probs.nlargest(10).index
+            elif "top3" in target_col and "sprint" not in target_col:
+                top_idx = race_probs.nlargest(3).index
+            elif "win" in target_col and "sprint" not in target_col:
+                top_idx = [race_probs.idxmax()]
+            elif "top8_sprint" in target_col:
+                top_idx = race_probs.nlargest(8).index
+            elif "top3_sprint" in target_col:
+                top_idx = race_probs.nlargest(3).index
+            elif "win_sprint" in target_col:
+                top_idx = [race_probs.idxmax()]
+            else:
+                continue
+            preds.loc[top_idx, f"pred_{target_col}"] = 1
+
+        results.append(preds)
+
+    # Merge all predictions
+    if not results:
+        print("⚠️ No predictions generated.")
+        return None
+
+    final_preds = results[0].copy()
+    for df_part in results[1:]:
+        final_preds = final_preds.merge(df_part, on = ["raceId", "driverId", "constructorId", "circuitId", "race_type"], how = "outer")
+
+    # Ensure IDs are integers
+    for col in ["raceId", "driverId", "constructorId", "circuitId"]:
+        final_preds[col] = pd.to_numeric(final_preds[col], errors = "coerce").fillna(0).astype(int)
+
+    # Save predictions to results/ folder
+    final_preds.to_csv(output_file, index = False)
+    print(f"\n✅ All predictions saved to: {output_file}")
+
+    return final_preds

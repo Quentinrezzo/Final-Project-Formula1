@@ -48,11 +48,7 @@ def train_val_test_split_by_year(
     train_df = df[df["year"].isin(train_years)]
     val_df = df[df["year"].isin(val_years)]
     test_df = df[df["year"].isin(test_years)]
-
-    # Safety check
-    if train_df.empty or val_df.empty or test_df.empty:
-        print("⚠️ Warning: One of train/val/test splits is empty. Check it out")
-
+    
     X_train, y_train = train_df[feature_columns], train_df[target_col]
     X_val, y_val = val_df[feature_columns], val_df[target_col]
     X_test, y_test = test_df[feature_columns], test_df[target_col]
@@ -73,7 +69,7 @@ def train_rf_baseline(X_train, y_train, X_val, y_val, random_state = 42):
         max_features = "sqrt",
         bootstrap = True,
         class_weight = "balanced",
-        random_state = random_state,
+        random_state = int(random_state),
         n_jobs =-1,)
     
     model.fit(X_train, y_train)

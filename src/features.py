@@ -1511,26 +1511,27 @@ def build_model_dataset() -> Path:
     return output_file
 
 
-def build_future_model_dataset(season_year: int = 2025) -> Path:
+def build_future_model_dataset(next_year: int = 2026) -> Path:
     """
-    Build a feature modelling dataset for a given season.
+    Build a feature modelling dataset for a given future season.
 
     This function reuses model_dataset.csv and:
-    - filters the rows for the requested season
+    - copies the last available season
+    - updates the year to next_year
     - drops all target_* columns
 
-    The table is saved as: data/processed/model_dataset_predictions_{season_year}.csv.
+    The table is saved as: data/processed/model_dataset_predictions_{next_year}.csv.
 
     Args:
-        season_year (int): season we want to predict.
+        next_year (int): season we want to predict.
 
     Returns:
-        Path: Path to the saved model_dataset_predictions_{season_year}.csv.
+        Path: Path to the saved model_dataset_predictions_{next_year}.csv.
     """
 
     # Define file paths
     model_file = processed_direction / "model_dataset.csv"
-    output_file = processed_direction / f"model_dataset_predictions_{season_year}.csv"
+    output_file = processed_direction / f"model_dataset_predictions_{next_year}.csv"
 
     # Load the dataset
     try:
@@ -1538,9 +1539,11 @@ def build_future_model_dataset(season_year: int = 2025) -> Path:
     except Exception as e:
         print(f"⚠️ Error while reading {model_file}: {e}")
         return None
-
-    # Keep only the requested season
-    season_df = df[df["year"] == season_year].copy()
+        
+    # Identify latest available season and copy it
+    latest_year = df["year"].max()
+    season_df = df[df["year"] == latest_year].copy()
+    season_df["year"] = next_year
 
     # Drop all target columns
     target_columns = [c for c in season_df.columns if c.startswith("target_")]
@@ -1549,7 +1552,7 @@ def build_future_model_dataset(season_year: int = 2025) -> Path:
     # Save new table to 'processed' folder
     season_df.to_csv(output_file, index = False)
 
-    print(f"✅ model_dataset_predictions_{season_year}.csv successfully created")
-    print(f"📂 Saved to: {output_file.name}")
+    print(f"✅ model_dataset_predictions_{next_year}.csv successfully created")
+    print(f"📂 Saved to: {output_file}")
 
     return output_file

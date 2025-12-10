@@ -1,10 +1,60 @@
-# Final-Project-Formula1
-Final-Project-UNIL-Data_Science
+# 🏎️ Formula 1 Race Outcome Prediction  
+## Season-Ahead Forecasting with Machine Learning
 
-# 🚀 Project Setup
-To run this project, make sure you have Python 3.10+ installed
 
-# install all dependencies
-pip install -r requirements.txt
-# download the dataset
-python -m src.data
+## Overview
+This project predicts **Formula 1 race outcomes** — specifically whether each driver will finish in the **Top 10**, **Top 3**, or **win** a race for an **upcoming season** based on past performance data.
+
+Using the **Kaggle Formula 1 Race Data** dataset, the workflow combines **data engineering**, **feature creation**, and **machine learning models** to anticipate driver results before a season begins.  
+All predictions follow an **N–1 logic**: every forecast for a target year (e.g., 2026) is trained only on data from previous seasons (up to 2025).
+
+The ultimate goal is to understand which factors most influence race results such as driver consistency, constructor performance, and circuit characteristics while building a fully automated and interpretable forecasting pipeline.
+
+
+## Project Pipeline
+The pipeline is organized in **main.py** and executes the full end-to-end process:
+1. **Download and organize** the Kaggle dataset (data/raw/)
+2. **List and verify** available CSV files
+3. **Create processed folder** for intermediate datasets
+4. **Filter races** (e.g., 2015–2025) and all race-based tables
+5. **Filter dimension tables** (circuits, constructors, drivers, seasons, status)
+6. **Enrich processed tables** (circuits, races, status) with extra information
+7. **Feature engineering** build progressive (N–1) performance features for drivers, constructors, qualifying, and sprint sessions
+8. **Create model datasets** for current and future season predictions
+9. **Train and evaluate models** (Random Forest baseline for GP and Sprint targets)
+10. **Evaluate and simulate** 2025 results, and **predict** the 2026 season
+11. **Visualize results** with analytical plots and heatmaps
+
+## Outputs
+After running the full pipeline, the following results are generated:
+- **comparisons_predictions_2025** -> comparison of predicted vs. real 2025 race results 
+- **predictions_2025** -> model outputs for the 2025 season (hold-out simulation)
+- **predictions_2026** -> predicted outcomes for the 2026 season (season-ahead forecast)
+- **rf_baseline_metrics** -> Random Forest model evaluation metrics across all targets
+- **the graphs folder** -> containing analytical visualizations as well as the most influential features across all models
+
+
+## How to run
+
+### 1. Setup Environment
+Clone the repository and install dependencies:
+
+**in a VSCode Terminal**
+git clone https://github.com/Quentinrezzo/Final-Project-Formula1.git
+cd Final-Project-Formula1
+
+### 2. Create the environment from the environment.yml and activate it
+conda env create -f environment.yml
+conda activate f1-project
+
+### 3. Verify installation
+conda list
+
+### 4. Run the full pipeline
+python main.py
+
+
+
+**Author:** Quentin Rezzonico
+**Last update:** December 2025
+**Contact:** www.linkedin.com/in/quentinrezzonico

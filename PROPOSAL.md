@@ -23,6 +23,7 @@ The project will include:
   of 2026 using results up to 2025)
 - **Evaluating predictions** by comparing model outputs with actual 2025 results
   (when predicting 2025 as hold‑out)
+- **Visualizing model outputs** through graphs (e.g., driver performance heatmaps, prediction summaries, and comparison plots)
 
 # Expected challenges and how I will address them
 - **Data imbalance:** Only a few drivers consistently finish in the Top 3 or win races.
@@ -39,5 +40,4 @@ The project will be considered successful if:
 1. The model achieves strong predictive accuracy on the 2025 hold‑out season
    (e.g., ROC-AUC > 0.7)
 2. The model produces coherent and meaningful season‑ahead predictions
-3. The analysis provides interpretable insights into which features most influence
-   future race outcomes
+3. The project delivers clear and informative visualizations to communicate driver and model performance across seasons

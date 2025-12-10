@@ -9,4 +9,5 @@ Main modules:
 - features: building features for models
 - models: defining and training models
 - evaluation: metrics and visualizations
+- visualization: graph constructions
 """
