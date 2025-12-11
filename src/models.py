@@ -58,7 +58,7 @@ def train_val_test_split_by_year(
 
 def train_rf_baseline(X_train, y_train, X_val, y_val, random_state = 42):
     """
-    Train a simple Random Forest baseline model and print validation metrics.
+    Train a Random Forest baseline model and print validation metrics.
     """
     
     model = RandomForestClassifier(

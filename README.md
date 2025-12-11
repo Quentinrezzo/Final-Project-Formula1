@@ -1,4 +1,4 @@
-# 🏎️ Formula 1 Race Outcome Prediction  
+# 🏎️ Predicting Formula 1 Race Outcomes (Season‑Ahead Forecasting)
 ## Season-Ahead Forecasting with Machine Learning
 
 

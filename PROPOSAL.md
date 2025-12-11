@@ -5,7 +5,7 @@ Formula 1 is a sport driven by precision, technology, and data. Every race outco
 
 The aim of this project is to apply data science and machine learning techniques to analyze how historical performance influences race outcomes and to build a model capable of forecasting an entire future season. This project will follow an N‑1 logic: all predictions for a target season (e.g., 2026) must rely only on seasons strictly before it (up to 2025).
 
-Using this framework, the model will estimate the probability that drivers will finish in the Top 10, Top 3, or win each race of the upcoming season. The motivation is to understand the relative importance of different performance indicators and to evaluate whether a data-driven model can anticipate race results before they occur.
+Using this framework, the model will estimate the probability that drivers will finish in the Top-10, Top-3, or win each race of the upcoming season. The motivation is to understand the relative importance of different performance indicators and to evaluate whether a data-driven model can anticipate race results before they occur.
 
 # Planned approach and technologies
 I will use the **Kaggle Formula 1 Race Data** dataset, which provides detailed information on races, drivers, constructors, circuits, qualifying sessions, sprint events, and results.
