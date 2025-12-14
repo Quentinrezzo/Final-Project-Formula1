@@ -1,5 +1,7 @@
 """
-evs
+This module contains all visualization functions used in the Formula 1 prediction project.
+It centralizes the generation of plots and charts that support model evaluation,
+feature interpretation, and predictive analysis.
 """
 
 from pathlib import Path
@@ -220,18 +222,18 @@ def plot_predictions_summary_2026():
     sprint_counts = sprint_counts[sprint_counts["top8"] > 0]
 
     # Sort descending by number of wins
-    gp_counts = gp_counts.sort_values(by = ["win", "top3"], ascending = False)
-    sprint_counts = sprint_counts.sort_values(by = ["win", "top3"], ascending = False)
+    gp_counts = gp_counts.sort_values(by = ["win", "top3", "top10"], ascending = False)
+    sprint_counts = sprint_counts.sort_values(by = ["win", "top3", "top8"], ascending = False)
     
     # Create the plots
-    fig, axes = plt.subplots(1, 2, figsize = (14, 6), sharey = True)
+    fig, axes = plt.subplots(1, 2, figsize = (14, 6))
 
     # GP subplot
     gp_counts.plot(kind = "barh", ax = axes[0], color = ["lightblue", "royalblue", "midnightblue"], edgecolor = "black")
     axes[0].set_title("Grand Prix Predictions (2026)")
     axes[0].set_xlabel("Number of Races Predicted")
-    axes[0].set_ylabel("Driver")
     axes[0].legend(["Top 10", "Top 3", "Win"], title = "Target")
+    axes[0].set_ylabel("Driver")
     axes[0].invert_yaxis()
 
     # Sprint subplot
@@ -240,6 +242,7 @@ def plot_predictions_summary_2026():
     axes[1].set_xlabel("Number of Races Predicted")
     axes[1].legend(["Top 8", "Top 3", "Win"], title = "Target")
     axes[1].invert_yaxis()
+    axes[1].set_ylabel("Driver")
 
     plt.suptitle("Predicted Driver Performance Summary — 2026 Season", fontsize = 14)
     plt.tight_layout(rect = [0, 0, 1, 0.95])
@@ -306,7 +309,7 @@ def plot_predictions_heatmaps_2026():
     sprint_df = df[df["race_type"] == "sprint"].copy()
 
     # Keep all drivers who appear at least once
-    common_drivers = sorted(set(gp_df["driver"].dropna().unique()) | set(sprint_df["driver"].dropna().unique()))
+    common_drivers = sorted(set(gp_df["driver"].dropna()) | set(sprint_df["driver"].dropna()))
     gp_df = gp_df[gp_df["driver"].isin(common_drivers)]
     sprint_df = sprint_df[sprint_df["driver"].isin(common_drivers)]
     
@@ -314,19 +317,21 @@ def plot_predictions_heatmaps_2026():
     gp_pivot = gp_df.pivot_table(index = "driver", columns = "circuit", values = "score", aggfunc = "max").fillna(0)
     sprint_pivot = sprint_df.pivot_table(index = "driver", columns = "circuit", values = "score", aggfunc = "max").fillna(0)
     
-    # Ensure both tables have same driver order
-    driver_order = sorted(common_drivers)
+    # Compute total score for sorting
+    driver_total_scores = gp_pivot.sum(axis = 1)
+    driver_order = driver_total_scores.sort_values(ascending = False).index.tolist()
     gp_pivot = gp_pivot.reindex(driver_order)
     sprint_pivot = sprint_pivot.reindex(driver_order)
-
+    driver_total_scores = driver_total_scores[driver_total_scores > 0]
+    
     # Define colors
-    blues = ["lightblue", "royalblue", "midnightblue"]
-    oranges = ["gold", "orange", "#CD7F32"]
-    gp_cmap = LinearSegmentedColormap.from_list("gp_cmap", blues, N = 3)
-    sprint_cmap = LinearSegmentedColormap.from_list("sprint_cmap", oranges, N = 3)
+    blues = ["white", "lightblue", "royalblue", "midnightblue"]
+    oranges = ["white", "gold", "orange", "#CD7F32"]
+    gp_cmap = LinearSegmentedColormap.from_list("gp_cmap", blues, N = 4)
+    sprint_cmap = LinearSegmentedColormap.from_list("sprint_cmap", oranges, N = 4)
 
-    # Create the plots
-    fig, axes = plt.subplots(1, 2, figsize = (14, 6), sharey = True)
+    # Create the Heatmaps
+    fig, axes = plt.subplots(1, 2, figsize = (14, 6))
 
     # GP Heatmap
     im1 = axes[0].imshow(gp_pivot.values, cmap = gp_cmap, aspect = "auto", vmin = 0, vmax = 3)
@@ -343,12 +348,13 @@ def plot_predictions_heatmaps_2026():
     axes[1].set_xticks(np.arange(len(sprint_pivot.columns)) + 0.5)
     axes[1].set_xticklabels(sprint_pivot.columns, rotation = 75, ha = "right", fontsize = 8)
     axes[1].set_yticks(np.arange(len(sprint_pivot.index)))
-    axes[1].set_yticklabels([])
+    axes[1].set_yticklabels(sprint_pivot.index, fontsize = 9)
+    axes[1].set_ylabel("Driver")
 
     # Add legends
-    for c, label in zip(blues, ["Top 10", "Top 3", "Win"]):
+    for c, label in zip(blues, ["No points", "Top 10", "Top 3", "Win"]):
         axes[0].bar(0, 0, color = c, label = label)
-    for c, label in zip(oranges, ["Top 8", "Top 3", "Win"]):
+    for c, label in zip(oranges, ["No points", "Top 8", "Top 3", "Win"]):
         axes[1].bar(0, 0, color = c, label = label)
     axes[0].legend(title = "Target", fontsize = 8, loc = "lower right")
     axes[1].legend(title = "Target", fontsize = 8, loc = "lower right")
@@ -364,7 +370,7 @@ def plot_predictions_heatmaps_2026():
     return None
 
 
-def plot_combined_feature_importances(top_n = 15):
+def plot_combined_feature_importances(top_n = 20):
     """
     Collect feature importances from all trained Grand Prix and Sprint models
     and plot the most influential features across all targets.
@@ -434,5 +440,54 @@ def plot_combined_feature_importances(top_n = 15):
     plt.savefig(output_file, dpi = 300, bbox_inches = "tight")
     plt.show()
     print(f"\n✅ Combined feature importance plot saved successfully: {output_file}")
+
+    return None
+
+
+def plot_feature_correlation_heatmap(top_n = 30):
+
+    # Define file paths
+    dataset_file = processed_direction / "model_dataset.csv"
+    output_file = graphs_direction / "feature_correlation_heatmap.png"
+
+    # Load data
+    try:
+        df = pd.read_csv(dataset_file)
+    except Exception as e:
+        print(f"⚠️ Error while reading {dataset_file}: {e}")
+        return None
+        
+    # Automatically select only relevant numeric feature columns
+    cols_to_keep = [
+        col for col in df.columns
+        if col.startswith(("drv_", "team_", "circ_")) and df[col].dtype!= "object"]
+    corr_df = df[cols_to_keep]
+    
+    # Compute the correlation matrix
+    corr_matrix = df.corr(numeric_only = True)
+
+    # Identify top correlated features
+    mean_corr = corr_matrix.abs().mean().sort_values(ascending = False)
+    top_features = mean_corr.head(top_n).index
+    zoom_corr = corr_matrix.loc[top_features, top_features]
+    
+    # Create the Heatmap
+    fig, ax = plt.subplots(figsize = (8, 6))
+    cax = ax.matshow(zoom_corr, cmap="coolwarm", vmin =-1, vmax = 1)
+    plt.title(f"Top {top_n} Most Correlated Features", pad = 20, fontsize = 14)
+    fig.colorbar(cax)
+
+    ticks = np.arange(len(zoom_corr.columns))
+    ax.set_xticks(ticks)
+    ax.set_yticks(ticks)
+    ax.set_xticklabels(zoom_corr.columns, rotation = 90, fontsize = 8)
+    ax.set_yticklabels(zoom_corr.columns, fontsize = 8)
+    
+    # Save to graphs/ folder
+    plt.tight_layout()
+    plt.savefig(output_file, dpi = 300, bbox_inches = "tight")
+    plt.show()
+    
+    print(f"✅ Correlation heatmap saved at: {output_file}")
 
     return None

@@ -1,12 +1,10 @@
 # 🏎️ Predicting Formula 1 Race Outcomes (Season‑Ahead Forecasting)
-## Season-Ahead Forecasting with Machine Learning
-
 
 ## Overview
-This project predicts **Formula 1 race outcomes** — specifically whether each driver will finish in the **Top 10**, **Top 3**, or **win** a race for an **upcoming season** based on past performance data.
+This project predicts **Formula 1 race outcomes** specifically whether each driver will finish in the **Top-10 (GP), Top-8 (Sprint), Top-3, or Win** a race for an **upcoming season** based on past performance data.
 
-Using the **Kaggle Formula 1 Race Data** dataset, the workflow combines **data engineering**, **feature creation**, and **machine learning models** to anticipate driver results before a season begins.  
-All predictions follow an **N–1 logic**: every forecast for a target year (e.g., 2026) is trained only on data from previous seasons (up to 2025).
+Using the **Kaggle Formula 1 Race Data** repository, the workflow combines **data engineering**, **feature creation**, and **machine learning models** to anticipate driver results before a season begins.
+All predictions follow an **N–1 logic**: every forecast for a target year (e.g., 2026) is trained only on data from the previous five seasons using a rolling window (up to 2025).
 
 The ultimate goal is to understand which factors most influence race results such as driver consistency, constructor performance, and circuit characteristics while building a fully automated and interpretable forecasting pipeline.
 
@@ -42,15 +40,12 @@ Clone the repository and install dependencies:
 **in a VSCode Terminal**
 git clone https://github.com/Quentinrezzo/Final-Project-Formula1.git
 cd Final-Project-Formula1
-
-### 2. Create the environment from the environment.yml and activate it
-conda env create -f environment.yml
 conda activate f1-project
 
-### 3. Verify installation
+### 2. Verify installation
 conda list
 
-### 4. Run the full pipeline
+### 3. Run the full pipeline
 python main.py
 
 

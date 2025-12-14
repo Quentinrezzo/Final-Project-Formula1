@@ -19,7 +19,11 @@ Pipeline:
 
 from pathlib import Path
 import pandas as pd
+import os
 import time
+
+# Ensure working directory is project root
+os.chdir(Path(__file__).resolve().parent)
 
 # 1,2) Download raw data and lists the available CSV files
 from src.downloading_dataset import download_dataset
@@ -73,7 +77,8 @@ from src.visualization import (
     plot_comparison_metrics,
     plot_predictions_summary_2026,
     plot_predictions_heatmaps_2026,
-    plot_combined_feature_importances,)
+    plot_combined_feature_importances,
+    plot_feature_correlation_heatmap,)
 
 
 def main() -> None:
@@ -88,13 +93,9 @@ def main() -> None:
     # 2. Lists the available CSV files
     print("\n🟦 STEP 2 – List CSV files in data/raw/")
     csv_files = sorted(data_raw_path.glob("*.csv"))
-    if not csv_files:
-        print("❌ No CSV files found in data/raw/. Please check Kaggle download.")
-        return
-    else:
-        print("✅ CSV files available in data/raw/:")
-        for f in csv_files:
-            print("   -", f.name)
+    print("✅ CSV files available in data/raw/:")
+    for f in csv_files:
+        print("   -", f.name)
             
     # 3. Ensure data/processed/ exists
     print("\n🟦 STEP 3 – Ensure processed directory exists")
@@ -132,7 +133,7 @@ def main() -> None:
     # 5. Filter dimension tables (no raceId column)
     print("\n🟦 STEP 5 – Filter dimension tables (circuits, constructors, drivers, seasons, status)")
     filter_circuits_by_races()
-    filter_constructors_by_results()
+    filter_constructors_by_races()
     filter_drivers_by_results()
     filter_seasons_by_year()
     filter_status_by_results()
@@ -140,113 +141,71 @@ def main() -> None:
     
     # 6. Data enrichment (circuits, races, status)
     print("\n🟦 STEP 6 – Data Enrichment")
-
     # 6.1 Circuits enrichment
     print("\n Enriching circuits_cleaned.csv with extra info")
     circuits_file = add_extra_info_on_circuits()
-    if circuits_file is None:
-        print("❌ Error in add_extra_info_on_circuits()")
-        return
     print("✅ circuits_cleaned enriched")
 
     print("\n Filling missing circuit fields")
     circuits_file = fill_circuit_extra_info()
-    if circuits_file is None:
-        print("❌ Error in fill_circuit_extra_info()")
-        return
     print("✅ circuits_cleaned fully filled")
 
     # 6.2 Races enrichment
     print("\n Enriching races_cleaned.csv with extra metadata")
     races_file = add_extra_info_on_races()
-    if races_file is None:
-        print("❌ Error in add_extra_info_on_races()")
-        return
     print("✅ races_cleaned enriched")
 
     print("\n Filling missing race distances (km)")
     races_file = fill_races_distance_km()
-    if races_file is None:
-        print("❌ Error in fill_races_distance_km()")
-        return
     print("✅ races distance info filled")
 
     # 6.3 Status enrichment
     print("\n Adding mechanical/crash/other categories to status_cleaned.csv")
     status_file = add_status_dnf_categories()
-    if status_file is None:
-        print("❌ Error in add_status_dnf_categories()")
-        return
     print("✅ Status categories enriched (mech/crash/other/no_dnf)")
 
     # 7. Create progressive feature performance tables
     print("\n🟦 STEP 7 – Build progressive feature performance tables")
-
     # 7.1 Base driver-race table
     print("\n Building driver_race_base.csv")
     driver_race_base_file = build_driver_race_base()
-    if driver_race_base_file is None:
-        print("❌ Error in build_driver_race_base()")
-        return
     print(f"✅ driver_race_base created: {driver_race_base_file}")
 
     # 7.2 Drivers performance
     print("\n Building driver_progressive_performance.csv")
     drivers_perf_file = build_driver_progressive_performance()
-    if drivers_perf_file is None:
-        print("❌ Error in build_driver_progressive_performance()")
-        return
     print(f"✅ driver_progressive_performance created: {drivers_perf_file}")
 
     # 7.3 Constructors performance
     print("\n Building constructor_progressive_performance.csv")
     constructors_perf_file = build_constructor_progressive_performance()
-    if constructors_perf_file is None:
-        print("❌ Error in build_constructor_progressive_performance()")
-        return
     print(f"✅ constructor_progressive_performance created: {constructors_perf_file}")
 
     # 7.4 Sprint performance per driver
     print("\n Building sprint_progressive_performance.csv")
     sprint_perf_file = build_sprint_progressive_performance()
-    if sprint_perf_file is None:
-        print("❌ Error in build_sprint_progressive_performance()")
-        return
     print(f"✅ sprint_progressive_performance created: {sprint_perf_file}")
 
     # 7.5 Qualifying performance per driver
     print("\n Building qualifying_progressive_performance.csv")
     quali_perf_file = build_qualifying_progressive_performance()
-    if quali_perf_file is None:
-        print("❌ Error in build_qualifying_progressive_performance()")
-        return
     print(f"✅ qualifying_progressive_performance created: {quali_perf_file}")
 
     # 7.6 Driver x circuit performance
     print("\n Building driver_circuits_progressive_performance.csv")
     circuits_perf_file = build_driver_circuits_progressive_performance()
-    if circuits_perf_file is None:
-        print("❌ Error in build_driver_circuits_progressive_performance()")
-        return
     print(f"✅ driver_circuits_progressive_performance created: {circuits_perf_file}")
     
     # 8. Create final modelling dataset
     print("\n🟦 STEP 8 – Build final modelling dataset and the future season dataset for predictions")
     model_file = build_model_dataset()
-    if model_file is None:
-        print("❌ Error while building model_dataset.csv")
-        return
-    else:
-        print(f"✅ model_dataset.csv successfully created")
-        print(f"📂 Saved to: {model_file}")
+    print(f"✅ model_dataset.csv successfully created")
+    print(f"📂 Saved to: {model_file}")
 
     # 8.1 Create future season dataset (2026)
     print("\n Build future model dataset for next season predictions (2026)")
     future_file = build_future_model_dataset(next_year = 2026)
-    if future_file is None:
-        print("❌ Error while building model_dataset_predictions_2026.csv")
-    else:
-        print("✅ model_dataset_predictions_2026.csv ready for future predictions")
+    print("✅ model_dataset_predictions_2026.csv ready for future predictions")
 
     # 9. Modelling (Random Forest baseline)
     print("\n🟦 STEP 9 – Train Random Forest models")
@@ -264,7 +223,6 @@ def main() -> None:
     
     # 10. Evaluation and predictions
     print("\n🟦 STEP 10 – Model evaluation, season 2025 simulation, and future season predictions")
-    
     print("\n Ensure results directory exists")
     results_dir: Path = create_results_folder()
     print(f"📁 Results directory: {results_dir}")
@@ -292,7 +250,6 @@ def main() -> None:
     
     # 11. Visualizations
     print("\n🟦 STEP 11 – Generating visualizations for model evaluation and 2026 predictions")
-    
     print("\n Ensure graphs directory exists")
     graphs_dir: Path = create_graphs_folder()
     print(f"📁 Figures directory: {graphs_dir}")
@@ -317,12 +274,16 @@ def main() -> None:
     plot_predictions_heatmaps_2026()
     print("✅ Heatmaps generated and saved successfully")
 
-    # 11.5 Visualize
+    # 11.5 Visualize features importances
     print("\n Visualize feature importance across all models")
-    plot_combined_feature_importances(top_n = 15)
+    plot_combined_feature_importances(top_n = 20)
     print("✅ Combined feature importance plot generated and saved successfully")
-    
-    print("\n All visualization plots successfully generated and saved")
+
+    # Visualize feature correlation
+    print("\n Visualize feature correlation")
+    plot_feature_correlation_heatmap(top_n = 30)
+    print("✅ Combined feature correlation plot generated and saved successfully")
+    print("\n✅ All visualization plots successfully generated and saved")
 
     # End
     end_time = time.time()

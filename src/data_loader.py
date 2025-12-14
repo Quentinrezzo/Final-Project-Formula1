@@ -267,7 +267,7 @@ def filter_constructors_by_races() -> Path:
     return output_file
 
 
-def filter_drivers_by_races() -> Path:
+def filter_drivers_by_results() -> Path:
     """
     Filter the 'drivers.csv' file to include only the drivers that appear
     in 'results_cleaned.csv'.
