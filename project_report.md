@@ -3,13 +3,13 @@
 
 **Abstract-This project explores the use of machine learning techniques to predict Formula 1 driver and team performance for upcoming Grand Prix and Sprint races. Using historical race data enriched with driver, constructor, and circuit characteristics, we built and evaluated Random Forest models to forecast key outcomes such as top-10 finishes, top-8 finishes, podiums, and race wins. Separate models were trained for traditional Grand Prix and Sprint formats to capture their different competitive dynamics.
 Our approach combines predictive modeling with analytical visualization to better understand which factors most strongly influence success. The analysis shows that driver consistency, team performance, and circuit characteristics play a central role in determining race outcomes. The models reached solid validation accuracy and ROC-AUC scores across all targets, confirming their ability to generalize to future seasons.
-Finally, the project provides interpretable view of performance trends in Formula 1. These findings could inform team strategy, season preparation, and even enrich the experience of F1 fans.**
+Finally, the project offers an interpretable view of performance trends in Formula 1. These findings could support team strategy, season planning, and even enhance the experience for F1 fans.**
 
 
 ## I. INTRODUCTION
 Formula 1 has always been a sport of precision, strategy, and constant innovation. Each race combines driver skill, car engineering, and tactical choices made under intense pressure, all within environments that change from one circuit to another, making outcome prediction a complex task. As the sport becomes increasingly data-driven, engineers are constantly seeking methods to analyze and interpret the growing volume of historical race information in order to improve both car and driver performance over time.
 
-Machine learning provides a promising framework for uncovering patterns and trends within these complex datasets. Beyond the excitement of competition, understanding what drives success on the track is also a way to study human performance, decision-making, and technological optimization under pressure. This project explores how data science techniques, particularly Random Forest models can be applied to forecast race outcomes and identify the most influential factors shaping results.
+Machine learning provides a promising framework for uncovering patterns and trends within these complex datasets. Beyond the excitement of competition, understanding what drives success on the track is also a way to study human performance, decision-making, and technological optimization under pressure. This project explores how data science techniques, particularly Random Forest models, to forecast race outcomes and identify the most influential factors that shape results.
 
 
 ## II. Research Question
@@ -47,7 +47,7 @@ The data originates from the **"Formula 1 Race Data" repository available on Kag
 
 The dataset is organized in a **relational structure** where each CSV file represents a distinct table (e.g., drivers.csv, constructors.csv, races.csv, results.csv, and circuits.csv). These tables are interconnected through primary and foreign keys such as driverId, constructorId, raceId and circuitId, allowing efficient merging and cross-referencing of entities across the dataset.
 
-At the center of this structure lies the races.csv table, which serves as the central reference linking race results to circuits, seasons (years), and numerous other features. This relational architecture enables the creation of integrated datasets that combine driver-level, team-level, and circuit-level attributes for each race which forms the analytical foundation of this project.
+At the core of this structure is the races.csv table, which links race results to circuits, seasons (years), and numerous other features. This relational architecture enables the creation of integrated datasets that combine driver-level, team-level, and circuit-level attributes for each race which forms the analytical foundation of this project.
 
 ### B. Preprocessing Steps
 The preprocessing phase was a crucial component of this project, transforming raw Formula 1 data into a consistent, enriched, and model-ready format. All the data preparation logic was implemented in the src/data_loader.py, src/data_enrichment.py, and src/features.py scripts, ensuring a modular and reproducible workflow.
@@ -59,13 +59,13 @@ After cleaning and standardizing the data, several datasets were enriched with n
 To avoid data leakage and capture evolving trends, a series of progressive performance tables were created for each entity including drivers, constructors, qualifying sessions, sprints, and driver–circuit combinations. Each table aggregated historical statistics such as average finish position, podium rate, mechanical failure rate, and consistency indices.
 In addition, measures of driver and constructor experience were incorporated, allowing the model to learn from recent yet contextually relevant performance patterns rather than entire career histories.
 
-The final step consisted of **merging all progressive performance tables** into a single integrated table named model_dataset.csv serving as the foundation for model training. This key dataset, generated through the features.py file, contains **2,278 rows and 113 columns**, representing a rich overview of the features influencing race outcomes in Formula 1.
-A **rolling five-year window** was applied. This dynamic structure allows the model to remain temporally consistent and adaptive to new data, while preventing information leakage from future races.
+The final step consisted of **merging all progressive performance tables** into a single integrated table named model_dataset.csv serving as the foundation for model training. This dataset, generated through the features.py file, contains **2,278 rows and 113 columns**, representing a rich overview of the features influencing race outcomes in Formula 1.
+A **rolling five-year window** was applied. This setup keeps the model consistent over time and adaptive to new data, while avoiding any leakage from future results.
 
 ### C. Models Used
 The predictive modeling stage of this project focused on evaluating multiple machine learning algorithms to identify the most effective approach for forecasting Formula 1 race outcomes. The model development and training logic were implemented in the src/models.py file, ensuring full reproducibility and consistency across experiments.
 
-Several classification models including Logistic Regression, Gradient Boosting, XGBoost, and Random Forest were evaluated for their ability to capture the complex, nonlinear relationships between input features and race outcomes. Among these, the Random Forest model achieved the highest overall performance with a **validation accuracy of 0.80 and a ROC–AUC score of 0.83**, outperforming the other approaches. For this reason, it was selected as the final model for the project. Training and validation were conducted separately for Grand Prix and Sprint formats, using the rolling-window described in Section B.
+Several models including Logistic Regression, Gradient Boosting, XGBoost, and Random Forest were tested and compared for their ability to capture the complex, nonlinear relationships between input features and race outcomes. Among these, the Random Forest model achieved the highest overall performance with a **validation accuracy of 0.80 and a ROC–AUC score of 0.83**, outperforming the other approaches. For this reason, it was selected as the final model for the project. Training and validation were conducted separately for Grand Prix and Sprint formats, using the rolling-window described in Section B.
 
 | Model                | Validation Accuracy | Validation ROC–AUC |
 |----------------------|---------------------|--------------------|
@@ -186,15 +186,13 @@ A more detailed version of these predictions, showing per-driver and per-circuit
 
 
 ## V. Discussion
-The Random Forest model outperformed the other tested algorithms, Logistic Regression, Gradient Boosting, and XGBoost mainly due to its ability to capture non-linear relationships between driver, team, and circuit variables. Its ensemble structure also helped prevent overfitting, ensuring stable performance across different seasons despite the relatively small dataset.
-
-While XGBoost typically excels in structured prediction tasks, its advantage was limited here by the small sample size and class imbalance. The Random Forest’s simpler averaging mechanism proved more consistent and easier to generalize.
+The Random Forest model outperformed other algorithms, including XGBoost, Logistic Regression, and Gradient Boosting, thanks to its capacity to capture non-linear relationships between driver, team, and circuit factors. Given the small dataset and class imbalance, XGBoost’s usual advantage was limited, whereas Random Forest delivered more stable and generalizable results.
 
 The analysis showed that team- and circuit-level features had a stronger influence on race outcomes than driver-only metrics. This reflects current Formula 1 dynamics, where car performance and reliability often outweigh individual skill. The model’s predictions therefore aligned closely with real-world performance patterns.
 
 Despite its strong predictive performance, **the model still faces important limitations.** Even though reliability metrics such as historical frequencies of crashes or mechanical failures were included to estimate race incident likelihood, these cannot fully capture the unpredictability of Formula 1. Events like collisions, weather changes, or technical issues remain outside the model’s scope and can drastically alter results.
 
-Moreover, Formula 1 performance is also shaped by human and psychological factors that no data-driven approach can fully capture, such as driver confidence, focus, or team decision-making under pressure. These aspects often weigh as heavily as mechanical performance or race strategy but remain invisible to the model.
+Moreover, Formula 1 performance is also influenced by human and psychological factors that data alone cannot capture, such as driver confidence, focus, or team decision-making under pressure. These aspects often weigh as heavily as mechanical performance or race strategy but remain invisible to the model.
 
 Finally, predictive reliability depends on the completeness and quality of the data. Factors like tire strategy, mid-season upgrades, or real-time pit-stop decisions are not modeled explicitly, introducing uncertainty. These limitations highlight that, while the model provides valuable insights, it cannot fully capture the dynamic and multifaceted nature of Formula 1 competition.
 
@@ -202,9 +200,11 @@ Overall, the results aligned with expectations: dominant drivers and teams were 
 
 
 ## Conclusion
-This project applied machine learning techniques to predict Formula 1 race outcomes using historical performance data. After extensive data cleaning and feature engineering, the Random Forest model emerged as the most effective algorithm, achieving a validation accuracy of 79% and a ROC–AUC score of 0.84. It successfully predicted Grand Prix and Sprint outcomes across multiple targets (Top-10, Top-8 Top-3, and Win), demonstrating strong generalization and interpretability. The analysis revealed that team and circuit-level variables such as reliability, car performance, and circuit characteristics had greater influence on race outcomes than driver-only metrics, echoing real-world Formula 1 dynamics.
+This project applied machine learning techniques to predict Formula 1 race outcomes using historical performance data. After comparing several algorithms, Random Forest proved the most reliable overall. It successfully predicted Grand Prix and Sprint results across multiple targets (Top-10, Top-8 Top-3, and Win), demonstrating both strong generalization and interpretability. The analysis showed that team- and circuit-level variables had greater influence on outcomes than driver-only metrics, reflecting real-world Formula 1 dynamics.
 
-For future work, expanding the dataset to include real-time variables like weather, tire wear, or pit strategies could further improve accuracy. Incorporating driver–team interactions and long-term performance trends may also enhance predictive depth. While Formula 1 results remain partly unpredictable, this project shows that machine learning can provide valuable, data-driven insights into performance trends and competitive balance in modern motorsport.
+In response to the project’s central question from Section II.A (Problem), the results show that machine learning can predict Formula 1 outcomes from historical and contextual data, though these findings should be interpreted with some caution.
+
+Future work could include real-time variables such as weather, tire wear, and pit-stop strategy to improve accuracy. While Formula 1 will always retain an element of uncertainty, this project demonstrates that data-driven modeling can reveal valuable insights into performance trends and competitive balance in modern motorsport.
 
 
 # References
