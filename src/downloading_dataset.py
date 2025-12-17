@@ -23,7 +23,7 @@ def download_dataset() -> Path:
     """
 
     # Define the path
-    destination_path = project_root / "data / raw"
+    destination_path = project_root / "data/raw"
 
     # Always clean the folder if it already exists
     if destination_path.exists():
