@@ -2,7 +2,7 @@
 Main entry point for the Formula 1 race outcome prediction project.
 
 Pipeline:
-1. Downloads the Kaggle dataset into data/raw/
+1. Load local raw dataset
 2. Lists the available CSV files in data/raw/
 3. Ensure data/processed/ exists
 4. Filter races to recent seasons (2015–2025) and all race-based tables
@@ -25,7 +25,7 @@ import time
 # Ensure working directory is project root
 os.chdir(Path(__file__).resolve().parent)
 
-# 1,2) Download raw data and lists the available CSV files
+# 1,2) Download dataset for future updates (optional) and lists the available CSV files
 from src.downloading_dataset import download_dataset
 
 # 3,4,5) Filter csv files
@@ -85,10 +85,10 @@ def main() -> None:
     start_time = time.time()
     print("=== 🏁 F1 Project: full data pipeline ===")
 
-    # 1. Download raw data
-    print("\n🟦 STEP 1 – Download raw dataset")
-    data_raw_path: Path = download_dataset()
-    print(f"✅ Dataset downloaded successfully into data/raw")
+    # 1. Load local raw dataset
+    print("\n🟦 STEP 1 – Load local raw dataset")
+    data_raw_path = Path("data/raw")
+    print(f"✅ Using local dataset from: {data_raw_path}")
     
     # 2. Lists the available CSV files
     print("\n🟦 STEP 2 – List CSV files in data/raw/")

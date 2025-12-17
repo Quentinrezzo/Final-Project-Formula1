@@ -11,7 +11,7 @@ The ultimate goal is to understand which factors most influence race results suc
 
 ## Project Pipeline
 The pipeline is organized in **main.py** and executes the full end-to-end process:
-1. **Download and organize** the Kaggle dataset (data/raw/)
+1. **Load local raw dataset** the Kaggle dataset (data/raw/)
 2. **List and verify** available CSV files
 3. **Create processed folder** for intermediate datasets
 4. **Filter races** (e.g., 2015–2025) and all race-based tables
