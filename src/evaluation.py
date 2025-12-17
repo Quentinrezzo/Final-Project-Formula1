@@ -514,6 +514,29 @@ def predict_future_season(next_year: int = 2026) -> pd.DataFrame:
     for col in ["raceId", "driverId", "constructorId", "circuitId"]:
         final_preds[col] = pd.to_numeric(final_preds[col], errors = "coerce").fillna(0).astype(int)
 
+    # Fix a bug
+    for (race_id, race_type), group in final_preds.groupby(["raceId", "race_type"]):
+        if race_type == "gp":
+            topX, top3, win = "pred_target_top10", "pred_target_top3", "pred_target_win" 
+            n_topX = 10
+        else:
+            topX, top3, win = "pred_target_top8_sprint", "pred_target_top3_sprint", "pred_target_win_sprint"
+            n_topX = 8
+            
+        final_preds.loc[group.index, [topX, top3, win]] = 0
+        proba_topX = f"proba_{topX.replace('pred_', '')}"
+        if proba_topX not in group.columns:
+            continue
+        
+        probs = group[[proba_topX]].copy()
+        top10_idx = probs.nlargest(n_topX, proba_topX).index
+        top3_idx = probs.nlargest(3, proba_topX).index
+        win_idx = [probs[proba_topX].idxmax()]
+    
+        final_preds.loc[top10_idx, topX] = 1
+        final_preds.loc[top3_idx, top3] = 1
+        final_preds.loc[win_idx, win] = 1
+        
     # Save predictions to results/ folder
     final_preds.to_csv(output_file, index = False)
     print(f"\n✅ All predictions saved to: {output_file}")

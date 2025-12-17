@@ -389,37 +389,37 @@ def plot_combined_feature_importances(top_n = 20):
 
     importances_data = []
 
-    # Train the Grand Prix model
+    # Train the Grand Prix model for each target
     for target in ("target_top10", "target_top3", "target_win"):
         model = build_and_train_gp_model(target_col = target)
+        
+        # Extract feature importances for each model
+        feature_cols = model.feature_names_in_
+        importances = pd.Series(model.feature_importances_, index = feature_cols)
+        top_importances = importances.sort_values(ascending = False).head(top_n)
 
-    # Extract feature importances
-    feature_cols = model.feature_names_in_
-    importances = pd.Series(model.feature_importances_, index = feature_cols)
-    top_importances = importances.sort_values(ascending = False).head(top_n)
+        for feature, value in top_importances.items():
+            importances_data.append({
+                "Target": target,
+                "Feature": feature,
+                "Importance": value,
+                "Type": "Grand Prix"})
 
-    for feature, value in top_importances.items():
-        importances_data.append({
-            "Target": target,
-            "Feature": feature,
-            "Importance": value,
-            "Type": "Grand Prix"})
-
-    # Train the Sprint model
+    # Train the Sprint model for each target
     for target in ("target_top8_sprint", "target_top3_sprint", "target_win_sprint"):
         model = build_and_train_sprint_model(target_col = target)
+        
+        # Extract feature importances for each model
+        feature_cols = model.feature_names_in_
+        importances = pd.Series(model.feature_importances_, index = feature_cols)
+        top_importances = importances.sort_values(ascending = False).head(top_n)
 
-    # Extract feature importances
-    feature_cols = model.feature_names_in_
-    importances = pd.Series(model.feature_importances_, index = feature_cols)
-    top_importances = importances.sort_values(ascending = False).head(top_n)
-
-    for feature, value in top_importances.items():
-        importances_data.append({
-            "Target": target,
-            "Feature": feature,
-            "Importance": value,
-            "Type": "Sprint"})
+        for feature, value in top_importances.items():
+            importances_data.append({
+                "Target": target,
+                "Feature": feature,
+                "Importance": value,
+                "Type": "Sprint"})
     
     # Convert all results into a DataFrame
     importances_df = pd.DataFrame(importances_data)

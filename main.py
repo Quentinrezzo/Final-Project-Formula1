@@ -88,7 +88,7 @@ def main() -> None:
     # 1. Download raw data
     print("\n🟦 STEP 1 – Download raw dataset")
     data_raw_path: Path = download_dataset()
-    print(f"✅ Dataset downloaded successfully into {data_raw_path}")
+    print(f"✅ Dataset downloaded successfully into data/raw")
     
     # 2. Lists the available CSV files
     print("\n🟦 STEP 2 – List CSV files in data/raw/")

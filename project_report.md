@@ -1,15 +1,14 @@
 # Predicting Formula 1 Race Outcomes (Season‑Ahead Forecasting)
 
 
-**Abstract-This project explores the use of machine learning techniques to predict Formula 1 driver and team performance for upcoming Grand Prix and Sprint races. Using historical race data enriched with driver, constructor, and circuit characteristics, we built and evaluated Random Forest models to forecast key outcomes such as top-10 finishes, top-8 finishes, podiums, and race wins. Separate models were trained for traditional Grand Prix and Sprint formats to capture their different competitive dynamics.
-Our approach combines predictive modeling with analytical visualization to better understand which factors most strongly influence success. The analysis shows that driver consistency, team performance, and circuit characteristics play a central role in determining race outcomes. The models reached solid validation accuracy and ROC-AUC scores across all targets, confirming their ability to generalize to future seasons.
-Finally, the project offers an interpretable view of performance trends in Formula 1. These findings could support team strategy, season planning, and even enhance the experience for F1 fans.**
+*Abstract*-This project explores the use of machine learning to analyze and predict Formula 1 race outcomes using historical performance data. Random Forest models were trained on features to forecast key results such as top-10, top-8, podium, and race wins across both Grand Prix and Sprint events. Our approach combines predictive modeling with analytical visualization to better understand which factors most strongly influence success. Results highlight the strong influence of team, circuit, and driver performance, with Random Forest achieving solid validation scores that confirm both reliability and interpretability.
+Overall, the project offers an interpretable view of performance trends in Formula 1. These findings could support team strategy, season planning, and even enhance the experience for F1 fans.
 
 
 ## I. INTRODUCTION
 Formula 1 has always been a sport of precision, strategy, and constant innovation. Each race combines driver skill, car engineering, and tactical choices made under intense pressure, all within environments that change from one circuit to another, making outcome prediction a complex task. As the sport becomes increasingly data-driven, engineers are constantly seeking methods to analyze and interpret the growing volume of historical race information in order to improve both car and driver performance over time.
 
-Machine learning provides a promising framework for uncovering patterns and trends within these complex datasets. Beyond the excitement of competition, understanding what drives success on the track is also a way to study human performance, decision-making, and technological optimization under pressure. This project explores how data science techniques, particularly Random Forest models, to forecast race outcomes and identify the most influential factors that shape results.
+Machine learning provides a promising framework to uncover key factors influencing success and performance trends within these complex datasets. Beyond the excitement of competition, understanding what drives success on the track is also a way to study human performance, decision-making, and technological optimization under pressure.
 
 
 ## II. Research Question
@@ -26,9 +25,9 @@ These challenges make Formula 1 an ideal field for applying machine learning, wh
 ### B. Objective
 The main goal of this project is to leverage machine learning techniques to predict Formula 1 race outcomes for both Grand Prix and Sprint races. Specifically, the models aim to forecast whether a driver will finish within the top-10, top-3, or Win a Grand Prix, and within the top-8, top-3, or Win a Sprint race. These thresholds align with the FIA’s official points-scoring positions and provide a structured way to evaluate model performance across varying levels of competitiveness.
 
-To achieve this, Random Forest classifiers are trained using data from the five most recent seasons preceding the target year. For the current project, this means that models predicting the 2026 season use data from 2021 to 2025. This rolling-window approach enables the models to learn from the latest performance dynamics while avoiding information leakage from future results. Separate models are built for Grand Prix and Sprint formats to capture their distinct race lengths, strategies, and point systems.
+Machine learning classifiers were trained using data from the five most recent seasons preceding the target year. For the current project, this means that models predicting the 2026 season use data from 2021 to 2025. This rolling-window approach enables the models to learn from the latest performance dynamics while avoiding information leakage from future results. Separate models are built for Grand Prix and Sprint formats to capture their distinct race lengths, strategies, and point systems.
 
-The project’s objectives extend beyond accurate prediction. By analyzing feature importances, it seeks to identify which elements such as driver consistency, team performance trends, and circuit characteristics most influence success. These findings are then visualized to provide a clear, interpretable view of what drives high performance in Formula 1.
+The project’s objectives extend beyond accurate prediction. By analyzing feature importances, it seeks to identify key performance drivers such as team trends, driver consistency, and circuit characteristics and visualize them for interpretability.
 
 ### C. Scope
 The scope of this project is defined by both its analytical depth and its temporal focus. The analysis covers Formula 1 race data from 2015 to 2025. This range ensures sufficient historical depth to capture evolving performance trends while maintaining relevance to the modern hybrid era of Formula 1.
@@ -65,7 +64,7 @@ A **rolling five-year window** was applied. This setup keeps the model consisten
 ### C. Models Used
 The predictive modeling stage of this project focused on evaluating multiple machine learning algorithms to identify the most effective approach for forecasting Formula 1 race outcomes. The model development and training logic were implemented in the src/models.py file, ensuring full reproducibility and consistency across experiments.
 
-Several models including Logistic Regression, Gradient Boosting, XGBoost, and Random Forest were tested and compared for their ability to capture the complex, nonlinear relationships between input features and race outcomes. Among these, the Random Forest model achieved the highest overall performance with a **validation accuracy of 0.80 and a ROC–AUC score of 0.83**, outperforming the other approaches. For this reason, it was selected as the final model for the project. Training and validation were conducted separately for Grand Prix and Sprint formats, using the rolling-window described in Section B.
+Several models including Logistic Regression, Gradient Boosting, XGBoost, and Random Forest were tested and compared. Logistic Regression served as a simple, interpretable baseline but struggled to capture the nonlinear patterns present in racing data. Gradient Boosting and XGBoost, both ensemble methods that build trees sequentially, achieved strong accuracy but required extensive parameter tuning and were more prone to overfitting on this project’s relatively small dataset (about 2,000 rows). In contrast, Random Forest, which trains multiple trees in parallel and averages their outputs, produced the most stable and interpretable results by reducing random variance across predictions. Random Forest was therefore retained as the final predictive model.
 
 | Model                | Validation Accuracy | Validation ROC–AUC |
 |----------------------|---------------------|--------------------|
@@ -74,25 +73,23 @@ Several models including Logistic Regression, Gradient Boosting, XGBoost, and Ra
 | Gradient Boosting    | 0.751566            | 0.803060           |
 | XGBoost              | 0.764092            | 0.808159           |
 
-While **XGBoost** demonstrated competitive performance, it proved less efficient for this project’s moderate dataset size (around 2,000 rows). It required complex parameter tuning and showed signs of overfitting on validation data. In contrast, the **Random Forest** model produced more stable and interpretable results. By averaging multiple decision trees, the ensemble reduced random fluctuations and improved prediction stability across race targets.
-
-The final Random Forest classifier was configured with the following hyperparameters:
-- **n_estimators = 700** (number of trees in the ensemble)
-- **max_depth = 20** (limits tree depth to avoid overfitting)
-- **min_samples_split = 2** and **min_samples_leaf = 3** (controls node splitting for smoother
+The final Random Forest classifier was configured with the following hyperparameters:<br>
+- **n_estimators = 700** (number of trees in the ensemble)<br>
+- **max_depth = 20** (limits tree depth to avoid overfitting)<br>
+- **min_samples_split = 2** and **min_samples_leaf = 3** (controls node splitting for smoother<br>
   decision boundaries)
-- **max_features = "sqrt"** (enables random feature selection to decorrelate trees)
-- **bootstrap = True** (applies bootstrapped sampling for robust ensemble learning)
-- **class_weight = "balanced"** (compensates for class imbalance in race outcomes)
-- **random_state = 42** (ensures reproducibility of results)
-- **n_jobs = -1** (leverages all available CPU cores for parallel training and faster computation
+- **max_features = "sqrt"** (enables random feature selection to decorrelate trees)<br>
+- **bootstrap = True** (applies bootstrapped sampling for robust ensemble learning)<br>
+- **class_weight = "balanced"** (compensates for class imbalance in race outcomes)<br>
+- **random_state = 42** (ensures reproducibility of results)<br>
+- **n_jobs = -1** (leverages all available CPU cores for parallel training and faster computation)<br>
 
 ### D. Evaluation Metrics
 Model performance was evaluated using complementary metrics designed to assess both overall accuracy and class-specific quality. The evaluation process, implemented in src/evaluation.py, produced detailed reports and visualizations stored in the results/ directory.
 
 **Accuracy** served as the primary metric, representing the proportion of correctly predicted outcomes. However, since Formula 1 results are highly imbalanced (only one driver wins out of twenty), additional metrics were included to provide a more balanced evaluation. The **F1-score** was used to capture the balance between precision and recall for rare events such as wins or podium finishes, while **ROC–AUC** measured the model’s ability to distinguish between positive and negative classes across different thresholds.
 
-Evaluations were conducted separately for Grand Prix and Sprint formats across all targets: Top-10, Top-3, and Win for Grands Prix, and Top-8, Top-3, and Win for Sprints. This multi-target analysis provided a comprehensive view of model robustness and predictive reliability. Final results and comparative plots were generated using the src/visualization.py module, offering a clear overview of model performance across all targets and evaluation metrics.
+Evaluations covered all predictions targets (Top-10, Top-8, Top-3, Win) across both formats. This multi-target analysis provided a comprehensive view of model robustness and predictive reliability. Final results and comparative plots were generated using the src/visualization.py module, offering a clear overview of model performance across all targets and evaluation metrics.
 
 #### Directory Structure
 
@@ -131,12 +128,10 @@ Final-Project-Formula1/
 
 
 ## IV. Results
-This section presents and interprets the main results obtained from the Random Forest models used to predict Formula 1 race outcomes. The analysis focuses on two main aspects:
-- quantitative performance, through metrics such as Accuracy and ROC–AUC
-- comparative insights, highlighting how the model behaves across Grand Prix and Sprint race formats
+This section presents and interprets the main results obtained from the Random Forest models used to predict Formula 1 race outcomes.
 
 ### Model Comparison Table
-To assess predictive robustness, multiple Random Forest models were trained and evaluated across several targets. The table below summarizes their respective training, validation, and testing periods, along with the resulting performance metrics:
+To assess predictive robustness, several Random Forest models were trained and evaluated across multiple targets. The table below summarizes their respective training, validation, and testing periods, along with the resulting performance metrics:
 
 | Target             | Train Years      | Val Years | Test Years | Test Accuracy | Test ROC–AUC | Race Type 
 | ------------------ | ---------------- | --------- | ---------- | ------------- | ------------ | --------- |
@@ -146,8 +141,8 @@ To assess predictive robustness, multiple Random Forest models were trained and 
 | target_top8_sprint | 2021, 2022, 2023 | 2024      | 2025       | 0.7833        | 0.8067       | sprint    |
 | target_top3_sprint | 2021, 2022, 2023 | 2024      | 2025       | 0.7917        | 0.8301       | sprint    |
 | target_win_sprint  | 2021, 2022, 2023 | 2024      | 2025       | 0.9583        | 0.8304       | sprint    |
-> Source: results/rf_baseline_metrics.csv
-> (To get the graph, see results/graphs/rf_model_performance_by_target.png)
+> Source: results/rf_baseline_metrics.csv<br>
+> (To get the graph, see results/graphs/rf_model_performance_by_target.png)<br>
 
 The models achieved **strong predictive performance** across all targets, with consistent ROC-AUC values. The slightly higher accuracies observed in Sprint predictions likely reflect the shorter race duration and reduced number of laps, which limit external variability factors such as tire degradation or pit-stop quality.
 
@@ -178,19 +173,20 @@ The dark red block in the lower-right corner stands out as the main cluster, mos
 To conclude the analysis, the final Random Forest model generated predictions for the upcoming 2026 Formula 1 season, covering both Grand Prix and Sprint formats.
 The figure below summarizes the predicted performance of each driver across all circuits:
 
-![](results/graphs/predictions_summary_2026.png)
+<img src="results/graphs/predictions_summary_2026.png" style="width:120%;"/>
 
-The model outlines distinct performance tiers for 2026. Verstappen, Leclerc, Hamilton, and Norris are expected to lead both Grand Prix and Sprint events, while Piastri, Russell, and Antonelli form a strong and competitive midfield group. Overall, the projected Drivers’ Championship podium places Verstappen ahead of Leclerc and Hamilton, with Norris close behind, a ranking that aligns with recent trends and the model’s emphasis on consistency and team strength.
+In Grand Prix races, Verstappen is expected to dominate ahead of Hamilton, Piastri, and Leclerc, confirming his edge over full-distance events. In contrast, Sprint predictions show Leclerc leading narrowly over Verstappen, reflecting Ferrari’s stronger performance in shorter formats.
+Overall, the model highlights two distinct tiers: Verstappen, Hamilton, Leclerc, and Piastri form the leading group, while Russell, Norris, and Antonelli make up a competitive midfield. Combining both formats, **the projected Drivers’ Championship podium for 2026 places Verstappen ahead of Hamilton and Leclerc, with Piastri and Russell close behind.**
 
 A more detailed version of these predictions, showing per-driver and per-circuit outcomes, can be found in the graphs/ folder under predictions_heatmaps_2026.png.
 
 
 ## V. Discussion
-The Random Forest model outperformed other algorithms, including XGBoost, Logistic Regression, and Gradient Boosting, thanks to its capacity to capture non-linear relationships between driver, team, and circuit factors. Given the small dataset and class imbalance, XGBoost’s usual advantage was limited, whereas Random Forest delivered more stable and generalizable results.
+The Random Forest model outperformed other algorithms, thanks to its capacity to capture non-linear relationships between driver, team, and circuit factors.
 
 The analysis showed that team- and circuit-level features had a stronger influence on race outcomes than driver-only metrics. This reflects current Formula 1 dynamics, where car performance and reliability often outweigh individual skill. The model’s predictions therefore aligned closely with real-world performance patterns.
 
-Despite its strong predictive performance, **the model still faces important limitations.** Even though reliability metrics such as historical frequencies of crashes or mechanical failures were included to estimate race incident likelihood, these cannot fully capture the unpredictability of Formula 1. Events like collisions, weather changes, or technical issues remain outside the model’s scope and can drastically alter results.
+Despite its strong predictive performance, **the model still faces important limitations.** Even though reliability metrics such as historical frequencies of crashes or mechanical failures were included to estimate race incident likelihood, these cannot fully capture Formula 1’s inherent unpredictability driven by weather or incidents.
 
 Moreover, Formula 1 performance is also influenced by human and psychological factors that data alone cannot capture, such as driver confidence, focus, or team decision-making under pressure. These aspects often weigh as heavily as mechanical performance or race strategy but remain invisible to the model.
 
@@ -200,25 +196,25 @@ Overall, the results aligned with expectations: dominant drivers and teams were 
 
 
 ## Conclusion
-This project applied machine learning techniques to predict Formula 1 race outcomes using historical performance data. After comparing several algorithms, Random Forest proved the most reliable overall. It successfully predicted Grand Prix and Sprint results across multiple targets (Top-10, Top-8 Top-3, and Win), demonstrating both strong generalization and interpretability. The analysis showed that team- and circuit-level variables had greater influence on outcomes than driver-only metrics, reflecting real-world Formula 1 dynamics.
+This project applied machine learning techniques to predict Formula 1 race outcomes using historical performance data. After testing multiple algorithms, Random Forest emerged as the most reliable and interpretable.
 
 In response to the project’s central question from Section II.A (Problem), the results show that machine learning can predict Formula 1 outcomes from historical and contextual data, though these findings should be interpreted with some caution.
 
-Future work could include real-time variables such as weather, tire wear, and pit-stop strategy to improve accuracy. While Formula 1 will always retain an element of uncertainty, this project demonstrates that data-driven modeling can reveal valuable insights into performance trends and competitive balance in modern motorsport.
+Future work could include real-time variables such as tire wear, pit-stop strategy, or weather conditions to enhance predictive accuracy. While uncertainty remains part of the sport, this project demonstrates that data-driven modeling can reveal valuable insights into performance trends and competitive balance in modern motorsport.
 
 
 # References
-Datasets and Data Sources:
-- Kaggle: Formula 1 Race Data - dataset compiling official Formula 1 results and metadata, built using the Ergast API.
-- Ergast Developer API: official open API providing structured Formula 1 historical data since 1950.
+Datasets and Data Sources:<br>
+- Kaggle: Formula 1 Race Data - dataset compiling official Formula 1 results and metadata, built using the
+  Ergast API. (https://www.kaggle.com/datasets/jtrotman/formula-1-race-data)
+- Ergast Developer API: official open API providing structured Formula 1 historical data since 1950.<br>
 
-Libraries and Frameworks:
-- A complete list of dependencies can be found in the requirements.txt file
-- For further details regarding exact package versions, please refer to the environment.yml file
+Libraries and Frameworks:<br>
+- A complete list of dependencies can be found in the requirements.txt file<br>
+- For further details regarding exact package versions, please refer to the environment.yml file<br>
 
-Tools and External Resources:
-In addition to the datasets and libraries mentioned above, several online tools and resources were used to support the development, debugging, and validation of the project.
-- Formula 1 Official Website
-- L’Équipe – F1 Section
-- ChatGPT (OpenAI)
-- GitHub Copilot on Nuvolos
+Tools and External Resources:<br>
+In addition to the datasets and libraries mentioned above, several online tools and resources were used to<br> support the development, debugging, and validation of the project.
+- Formula 1 Official Website<br>
+- L’Équipe – F1 Section<br>
+- GitHub Copilot on Nuvolos<br>

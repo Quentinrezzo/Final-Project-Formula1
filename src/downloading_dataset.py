@@ -10,7 +10,7 @@ import kagglehub
 # Root of the project = parent folder of src/
 project_root = Path(__file__).resolve().parents[1]
 
-def download_dataset(destination: str = "data/raw") -> Path:
+def download_dataset() -> Path:
     """
     Download the dataset named 'Formula 1 Race Data' (1950-2025) from Kaggle using
     KaggleHub and copy it into data/raw/.
@@ -23,16 +23,21 @@ def download_dataset(destination: str = "data/raw") -> Path:
     """
 
     # Define the path
-    destination_path = project_root / destination
-    
-    # Create the folder if it does not already exist
+    destination_path = project_root / "data / raw"
+
+    # Always clean the folder if it already exists
+    if destination_path.exists():
+        print(f"🗑️ Removing existing folder: {destination_path}")
+        shutil.rmtree(destination_path)
+        
+    # Create the folder
     destination_path.mkdir(parents = True, exist_ok = True)
     
     # Copy the download files from Kaggle into your data/raw directory
     try:
         print("📦 Downloading the dataset named 'Formula 1 Race Data' (1950-2025) from Kaggle")
         # Download latest version
-        kaggle_path = kagglehub.dataset_download("jtrotman/formula-1-race-data")
+        kaggle_path = kagglehub.dataset_download("jtrotman/formula-1-race-data", force_download = True)
         src_path = Path(kaggle_path)
         shutil.copytree(src_path, destination_path, dirs_exist_ok = True)
         print(f"✅ Formula 1 Race Dataset download and available at: {destination_path}")
