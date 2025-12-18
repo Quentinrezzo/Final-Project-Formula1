@@ -6,7 +6,6 @@ __pycache__/
 *.pyo
 *.pyd
 *.py[cod]
-*.css
 
 # --- Jupyter notebooks ---
 .ipynb_checkpoints/
