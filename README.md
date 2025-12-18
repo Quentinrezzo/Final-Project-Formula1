@@ -39,8 +39,8 @@ Clone the repository and install dependencies:
 
 **in a VSCode Terminal**
 git clone https://github.com/Quentinrezzo/Final-Project-Formula1.git
-cd Final-Project-Formula1
-conda activate f1-project
+- cd Final-Project-Formula1
+- conda activate f1-project
 
 ### 2. Verify installation
 conda list
