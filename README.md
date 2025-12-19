@@ -38,8 +38,9 @@ After running the full pipeline, the following results are generated:
 Clone the repository and install dependencies:
 
 **in a VSCode Terminal**
-git clone https://github.com/Quentinrezzo/Final-Project-Formula1.git
+- git clone https://github.com/Quentinrezzo/Final-Project-Formula1.git
 - cd Final-Project-Formula1
+- conda env create -f environment.yml
 - conda activate f1-project
 
 ### 2. Verify installation
