@@ -43,18 +43,14 @@ Clone the repository and install dependencies:
 - conda env create -f environment.yml
 - conda activate f1-project
 
-### 2. Verify installation
-conda list
+### 2. Run the full pipeline
+- python main.py
 
-### 3. Run the full pipeline
-python main.py
-
-
-### Requirements
+## Requirements
 - Python 3.11
 - scikit-learn, pandas, matplotlib, seaborn, xgboost, kagglehub
 
 
-**Author:** Quentin Rezzonico
-**Last update:** December 2025
+**Author:** Quentin Rezzonico<br>
+**Last update:** December 2025<br>
 **Contact:** www.linkedin.com/in/quentinrezzonico
