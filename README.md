@@ -4,7 +4,17 @@
 This project predicts **Formula 1 race outcomes** specifically whether each driver will finish in the **Top-10 (GP), Top-8 (Sprint), Top-3, or Win** a race for an **upcoming season** based on past performance data.
 
 Using the **Kaggle Formula 1 Race Data** repository, the workflow combines **data engineering**, **feature creation**, and **machine learning models** to anticipate driver results before a season begins.
-All predictions follow an **N–1 logic**: every forecast for a target year (e.g., 2026) is trained only on data from the previous five seasons using a rolling window (up to 2025).
+All predictions follow an **N–1 logic**: features are computed cumulatively 
+from **2015 onwards**, ensuring each race only uses historical data available 
+up to that point. For model training, an **adaptive temporal split** is used:
+
+- **For evaluation** (e.g., predicting 2025): Train on 2021–2023 (3 years), 
+  validate on 2024, test on 2025
+- **For future forecasting** (e.g., predicting 2026): Train on 2021–2024 
+  (4 years), validate on 2025
+  
+This approach balances recent competitive dynamics (rolling training window) 
+with deep historical context (cumulative features from 2015).
 
 The ultimate goal is to understand which factors most influence race results such as driver consistency, constructor performance, and circuit characteristics while building a fully automated and interpretable forecasting pipeline.
 

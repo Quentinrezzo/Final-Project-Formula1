@@ -79,7 +79,7 @@ from src.visualization import (
     plot_predictions_heatmaps_2026,
     plot_combined_feature_importances,
     plot_feature_correlation_heatmap,)
-
+from src.model_comparison import compare_all_models
 
 def main() -> None:
     start_time = time.time()
@@ -279,11 +279,16 @@ def main() -> None:
     plot_combined_feature_importances(top_n = 20)
     print("✅ Combined feature importance plot generated and saved successfully")
 
-    # Visualize feature correlation
+    # 11.6 Visualize feature correlation
     print("\n Visualize feature correlation")
     plot_feature_correlation_heatmap(top_n = 30)
     print("✅ Combined feature correlation plot generated and saved successfully")
     print("\n✅ All visualization plots successfully generated and saved")
+
+    # 11.7 Model comparison
+    print("\n Model comparison...")
+    summary_df = compare_all_models(save_results=True)
+    print("✅ Model comparison completed successfully")
 
     # End
     end_time = time.time()
