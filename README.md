@@ -32,23 +32,70 @@ After running the full pipeline, the following results are generated:
 - **the graphs folder** -> containing analytical visualizations as well as the most influential features across all models
 
 
-## How to run
+## Setup
 
-### 1. Setup Environment
-Clone the repository and install dependencies:
+### 1. Clone the repository
+```bash
+git clone https://github.com/Quentinrezzo/Final-Project-Formula1.git
+cd Final-Project-Formula1
+```
 
-**in a VSCode Terminal**
-- git clone https://github.com/Quentinrezzo/Final-Project-Formula1.git
-- cd Final-Project-Formula1
-- conda env create -f environment.yml
-- conda activate f1-project
+### 2. Create and activate the Conda environment
+```bash
+conda env create -f environment.yml
+conda activate f1-project
+```
 
-### 2. Run the full pipeline
-- python main.py
+### 3. Run the full pipeline
+```bash
+python main.py
+```
 
 ## Requirements
 - Python 3.11
-- scikit-learn, pandas, matplotlib, seaborn, xgboost, kagglehub
+- pandas
+- numpy
+- matplotlib
+- seaborn
+- scikit-learn
+- kagglehub
+- xgboost
+
+
+## Directory Structure
+
+Final-Project-Formula1/
+│
+├── data/                             # Data directory
+│   ├── processed/                    # Processed datasets (generated)
+│   └── raw/                          # Raw, unprocessed data
+│
+├── notebooks/                        # Jupyter notebooks for exploration
+│
+├── results/                          # Model outputs
+│   ├── graphs/                       # Figures and plots
+│   ├── comparisons_predictions_2025.csv   # Model comparison results
+│   ├── predictions_2025.csv          # 2025 season predictions
+│   ├── predictions_2026.csv          # 2026 season predictions
+│   └── rf_baseline_metrics.csv       # Random Forest baseline metrics
+│
+├── src/                              # Source code
+│   ├── __init__.py                   # Package initializer
+│   ├── downloading_dataset.py        # Dataset download from Kaggle
+│   ├── data_loader.py                # Raw data loading and cleaning
+│   ├── data_enrichment.py            # Feature computation and enrichment
+│   ├── features.py                   # Feature engineering
+│   ├── models.py                     # Model training and evaluation
+│   ├── evaluation.py                 # Model performance metrics
+│   └── visualization.py              # Data visualization utilities
+│
+├── main.py                           # Main entry point (runs full pipeline)
+├── project_report.pdf                # Final project report
+├── PROPOSAL.md                       # Initial project proposal
+├── README.md                         # Project documentation
+├── environment.yml                   # Conda environment specification
+├── requirements.txt                  # pip dependencies
+└── .gitignore                        # Git ignore file
 
 
 **Author:** Quentin Rezzonico<br>
