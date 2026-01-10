@@ -63,7 +63,7 @@ python main.py
 
 
 ## Directory Structure
-
+```
 Final-Project-Formula1/
 │
 ├── data/                             # Data directory
@@ -96,6 +96,7 @@ Final-Project-Formula1/
 ├── environment.yml                   # Conda environment specification
 ├── requirements.txt                  # pip dependencies
 └── .gitignore                        # Git ignore file
+```
 
 
 **Author:** Quentin Rezzonico<br>
