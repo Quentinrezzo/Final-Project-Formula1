@@ -97,6 +97,7 @@ Final-Project-Formula1/
 │   ├── features.py                   # Feature engineering
 │   ├── models.py                     # Model training and evaluation
 │   ├── evaluation.py                 # Model performance metrics
+│   ├── model comparison.py           # Model comparison
 │   └── visualization.py              # Data visualization utilities
 │
 ├── main.py                           # Main entry point (runs full pipeline)
@@ -110,5 +111,5 @@ Final-Project-Formula1/
 
 
 **Author:** Quentin Rezzonico<br>
-**Last update:** December 2025<br>
+**Last update:** December 2026<br>
 **Contact:** www.linkedin.com/in/quentinrezzonico
